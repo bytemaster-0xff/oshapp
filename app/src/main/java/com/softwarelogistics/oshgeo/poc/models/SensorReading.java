@@ -1,7 +1,8 @@
 package com.softwarelogistics.oshgeo.poc.models;
 
+
 public class SensorReading {
-    public String Id;
-    public String DateStamp;
+    public long Id;
+    public java.sql.Date Timestamp;
     public String SensorId;
 }

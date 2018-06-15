@@ -3,6 +3,7 @@ package com.softwarelogistics.oshgeo.poc.models;
 import android.net.wifi.WifiConfiguration;
 
 public class OpenSensorHub {
+    public long Id;
     public GeoLocation Location;
     public String IPAddress;
     public String Name;
