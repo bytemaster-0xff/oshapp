@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activities.MainActivity">
+    <LinearLayout
+        android:layout_margin="20dp"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <TextView
+            android:id="@+id/textview_current_dbname"
+            android:layout_width="wrap_content"
+            android:textSize="16pt"
+            android:text="SELECT A DB"
+            android:layout_height="wrap_content" />
+        <Button
+            android:layout_gravity="center_horizontal"
+            android:layout_width="120dp"
+            android:layout_height="48dp"
+            android:text="Databases"
+            android:id="@+id/button_show_databases"  />
+        <Button
+            android:layout_gravity="center_horizontal"
+            android:layout_width="120dp"
+            android:layout_height="48dp"
+            android:text="Sensor Hubs"
+            android:id="@+id/button_show_sensor_hubs" />
+        <Button
+            android:layout_gravity="center_horizontal"
+            android:layout_width="120dp"
+            android:layout_height="48dp"
+            android:id="@+id/button_show_maps"
+            android:text="Show Map" />
+    </LinearLayout>
+</android.support.constraint.ConstraintLayout>

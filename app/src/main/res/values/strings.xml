@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">OSH Geo POC</string>
+    <string name="title_activity_geo_packages">Available Geo Packages</string>
+    <string name="title_activity_geo_package">Create/Edit Geo Package</string>
+    <string name="title_activity_osh_hubs">Open Sensor Hubs</string>
+    <string name="title_activity_osh_hub">Open Sensor Hub</string>
+    <string name="title_activity_osh_sensors">Sensors</string>
+
+    <string name="title_activity_main">SOFWERX - OpenSensorHub/Geo POC</string>
+     <!-- Icon to Unicode mapping https://fontawesome.com/icons?d=gallery -->
+    <string name="icon_trash">&#xf2ed;</string>
+    <string name="icon_add">&#xf0fe;</string>
+</resources>

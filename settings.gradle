@@ -1,0 +1,1 @@
+include ':app', ':geopackage-core-3.0.1', ':geopackage-android-3.0.1', ':geopackage-android-map-3.0.1', ':geopackage-3.0.1'
