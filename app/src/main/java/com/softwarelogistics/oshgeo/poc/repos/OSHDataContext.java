@@ -1,5 +1,6 @@
 package com.softwarelogistics.oshgeo.poc.repos;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.softwarelogistics.oshgeo.poc.models.GeoLocation;
 import com.softwarelogistics.oshgeo.poc.models.OpenSensorHub;
 import com.softwarelogistics.oshgeo.poc.models.Sensor;
@@ -96,11 +97,12 @@ public class OSHDataContext {
         return hubs;
     }
 
-    public boolean createTables() {
+    public boolean createTables(LatLng northWest, LatLng southEast) {
         try {
             mGeoPackage.createGeometryColumnsTable();
-            createHubsTable();
-            createSensorsTable();
+
+            createHubsTable(northWest, southEast);
+            createSensorsTable(northWest, southEast);
             createReadingsTable();
             createValuesTable();
             createCurrentValuesTable();
@@ -116,24 +118,18 @@ public class OSHDataContext {
         return srsDao.getOrCreateCode(ProjectionConstants.AUTHORITY_EPSG, (long) ProjectionConstants.EPSG_WORLD_GEODETIC_SYSTEM);
     }
 
-    private void createHubsTable() throws SQLException {
-        List<FeatureColumn> columns = new ArrayList<>();
-        int idx = 0;
-        columns.add(FeatureColumn.createPrimaryKeyColumn(idx++, COL_ID));
-        columns.add(FeatureColumn.createGeometryColumn(idx++, COL_GEOMETRY, GeometryType.POINT, true, null));
-        columns.add(FeatureColumn.createColumn(idx++, COL_NAME, GeoPackageDataType.TEXT,true, ""));
-        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_SSID, GeoPackageDataType.TEXT,true, ""));
-        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_SSID_PASSWORD, GeoPackageDataType.TEXT,false, ""));
-        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_IP, GeoPackageDataType.TEXT,true, ""));
-        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_IMAGE, GeoPackageDataType.BLOB,false, null));
-        FeatureTable tbl = new FeatureTable(HUB_TABLE_NAME, columns);
-        mGeoPackage.createFeatureTable(tbl);
-
+    private void addContentTables(String tableName, String description, LatLng northWest, LatLng southEast) throws SQLException
+    {
+        /* Now add maker int the package contents to show where the hubs are */
         Contents contents = new Contents();
-        contents.setTableName(HUB_TABLE_NAME);
+        contents.setTableName(tableName);
         contents.setDataType(ContentsDataType.FEATURES);
-        contents.setIdentifier(HUB_TABLE_NAME);
-        contents.setDescription("List of sensors for a particular sensor hub.");
+        contents.setIdentifier(tableName);
+        contents.setMaxY(northWest.latitude);
+        contents.setMaxX(southEast.longitude);
+        contents.setMinY(southEast.latitude);
+        contents.setMinX(northWest.longitude);
+        contents.setDescription(description);
         contents.setSrs(getSrs());
 
         ContentsDao contentsDao = mGeoPackage.getContentsDao();
@@ -146,10 +142,29 @@ public class OSHDataContext {
         geometryColumns.setColumnName(COL_GEOMETRY);
         geometryColumns.setGeometryType(GeometryType.POINT);
         geometryColumns.setSrs(getSrs());
+
         geometryColumns.setZ((byte) 0);
         geometryColumns.setM((byte) 0);
 
         geometryColumnsDao.create(geometryColumns);
+    }
+
+
+
+    private void createHubsTable(LatLng northWest, LatLng southEast) throws SQLException {
+        List<FeatureColumn> columns = new ArrayList<>();
+        int idx = 0;
+        columns.add(FeatureColumn.createPrimaryKeyColumn(idx++, COL_ID));
+        columns.add(FeatureColumn.createGeometryColumn(idx++, COL_GEOMETRY, GeometryType.POINT, true, null));
+        columns.add(FeatureColumn.createColumn(idx++, COL_NAME, GeoPackageDataType.TEXT,true, ""));
+        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_SSID, GeoPackageDataType.TEXT,true, ""));
+        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_SSID_PASSWORD, GeoPackageDataType.TEXT,false, ""));
+        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_IP, GeoPackageDataType.TEXT,true, ""));
+        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_IMAGE, GeoPackageDataType.BLOB,false, null));
+        FeatureTable tbl = new FeatureTable(HUB_TABLE_NAME, columns);
+        mGeoPackage.createFeatureTable(tbl);
+
+        addContentTables(HUB_TABLE_NAME, "List of sensors for a particular sensor hub.", northWest, southEast);
     }
 
     /**
@@ -161,18 +176,19 @@ public class OSHDataContext {
      *  Last Contact
      *
      */
-    private void createSensorsTable() {
+    private void createSensorsTable(LatLng northWest, LatLng southEast) throws SQLException {
         List<FeatureColumn> columns = new ArrayList<>();
         int idx = 0;
         columns.add(FeatureColumn.createPrimaryKeyColumn(idx++, COL_ID));
         columns.add(FeatureColumn.createColumn(idx++, SNSR_HUB_ID, GeoPackageDataType.INT, true, 0));
         columns.add(FeatureColumn.createGeometryColumn(idx++, COL_GEOMETRY, GeometryType.POINT, true, null));
         columns.add(FeatureColumn.createColumn(idx++, COL_NAME, GeoPackageDataType.TEXT,true, ""));
-        columns.add(FeatureColumn.createColumn(idx++, SNSR_COL_SNSR_ID, GeoPackageDataType.TEXT, true, ""));
         columns.add(FeatureColumn.createColumn(idx++, SNSR_COL_SNSR_TYPE, GeoPackageDataType.TEXT, true, null));
         columns.add(FeatureColumn.createColumn(idx++, SNSR_COL_LAST_CONTACT, GeoPackageDataType.TEXT, false, null));
         FeatureTable tbl = new FeatureTable(SNSR_TABLE_NAME, columns);
         mGeoPackage.createFeatureTable(tbl);
+
+        addContentTables(SNSR_TABLE_NAME, "List of sensors for all hubs.", northWest, southEast);
     }
 
     /**

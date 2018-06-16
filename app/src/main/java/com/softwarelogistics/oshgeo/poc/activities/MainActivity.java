@@ -8,20 +8,34 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.softwarelogistics.oshgeo.poc.R;
+import com.softwarelogistics.oshgeo.poc.adapters.GeoPackageContentsAdapter;
+import com.softwarelogistics.oshgeo.poc.repos.GeoDataContext;
+import com.softwarelogistics.oshgeo.poc.repos.GeoPackageDataContext;
+
+import java.sql.SQLException;
+import java.util.List;
+
+import javax.xml.datatype.Duration;
+
+import mil.nga.geopackage.core.contents.Contents;
 
 public class MainActivity extends AppCompatActivity {
 
-    Button mShowDatabases;
-    Button mShowSensorHubs;
-    Button mShowMap;
-    TextView mCurrentDBName;
-    String mCurrentPackageName;
+    private Button mShowDatabases;
+    private Button mShowSensorHubs;
+    private TextView mCurrentDBName;
+    private String mCurrentPackageName;
+    private ListView mContentsListView;
+
+    private List<Contents> mContents;
 
     final  int FINE_LOCATION_PERMISSION_REQUEST = 900;
-    boolean hasLocationPermissions = false;
+    private boolean hasLocationPermissions = false;
 
     public final static String EXTRA_DB_NAME = "SELECTEDDBNAME";
 
@@ -47,14 +61,7 @@ public class MainActivity extends AppCompatActivity {
         });
         mShowSensorHubs.setVisibility(View.INVISIBLE);
 
-        mShowMap = findViewById(R.id.button_show_maps);
-        mShowMap.setOnClickListener(new Button.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showMap();
-            }
-        });
-        mShowMap.setVisibility(View.INVISIBLE);
+        mContentsListView = findViewById(R.id.main_list_contents);
 
         mCurrentDBName = findViewById(R.id.textview_current_dbname);
         mCurrentDBName.setText("Please Open or Create a Database");
@@ -89,10 +96,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void showMap() {
-        Intent myIntent = new Intent(this, MapsActivity.class);
-        this.startActivity(myIntent);
-    }
 
     private void showSensorHubs() {
         Intent myIntent = new Intent(this, HubsActivity.class);
@@ -109,10 +112,20 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if(resultCode == GeoPackagesActivity.EXTRA_DB_SELECTED_RESULTCODE) {
-            mShowMap.setVisibility(View.VISIBLE);
             mShowSensorHubs.setVisibility(View.VISIBLE);
             mCurrentPackageName = data.getStringExtra(MainActivity.EXTRA_DB_NAME);
             mCurrentDBName.setText(data.getStringExtra(MainActivity.EXTRA_DB_NAME));
+
+            GeoDataContext ctx = new GeoDataContext(this);
+            GeoPackageDataContext pkgCtx = ctx.getPackage(mCurrentPackageName);
+            try {
+                mContents = pkgCtx.getContents();
+                GeoPackageContentsAdapter contentsAdapter = new GeoPackageContentsAdapter(this, R.layout.list_row_geo_package_contents, mContents);
+                mContentsListView.setAdapter(contentsAdapter);
+            }
+            catch(SQLException ex) {
+                Toast.makeText(this, "Error opening contents, likely corrupt Geo Package",Toast.LENGTH_SHORT);
+            }
         }
         else {
 

@@ -2,6 +2,8 @@ package com.softwarelogistics.oshgeo.poc.repos;
 
 import android.content.Context;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import java.util.List;
 
 import mil.nga.geopackage.GeoPackage;
@@ -27,10 +29,10 @@ public class GeoDataContext {
         return new GeoPackageDataContext(pkg);
     }
 
-    public GeoPackageDataContext createPackage(String packageName) {
+    public GeoPackageDataContext createPackage(String packageName, LatLng northWest, LatLng southEast) {
         mGeoPackageManager.create(packageName);
         GeoPackageDataContext ctx = getPackage(packageName);
-        ctx.createTables();
+        ctx.createTables(northWest, southEast);
         return ctx;
     }
 

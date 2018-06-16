@@ -41,7 +41,7 @@ public class HubsActivity extends AppCompatActivityBase implements RemoveHubHand
 
         mHubs = hubsContext.getHubs();
         mHubsListView = findViewById(R.id.list_hubs);
-        mHubsAdapter = new HubsAdapter(this, R.layout.list_row_sensor_hub, mHubs);
+        mHubsAdapter = new HubsAdapter(this, R.layout.list_row_sensor_hub, mHubs, this);
 
         mHubsListView.setAdapter(mHubsAdapter);
         mHubsListView.invalidate();

@@ -1,28 +1,21 @@
 package com.softwarelogistics.oshgeo.poc.activities;
 
 import android.Manifest;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
 import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.AttributeSet;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
@@ -32,15 +25,8 @@ import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.softwarelogistics.oshgeo.poc.R;
-import com.softwarelogistics.oshgeo.poc.models.GeoLocation;
-import com.softwarelogistics.oshgeo.poc.models.OpenSensorHub;
 import com.softwarelogistics.oshgeo.poc.repos.GeoDataContext;
-import com.softwarelogistics.oshgeo.poc.repos.GeoPackageDataContext;
-import com.softwarelogistics.oshgeo.poc.repos.OSHDataContext;
 import com.softwarelogistics.oshgeo.poc.utils.ValidationUtils;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class GeoPackageActivity extends AppCompatActivity
         implements OnMapReadyCallback {
@@ -65,30 +51,16 @@ public class GeoPackageActivity extends AppCompatActivity
 
         mMapFragment.getMapAsync(this);
 
-
         mDatabaseName = findViewById(R.id.edit_package_name);
         mSaveButton = findViewById(R.id.button_save_package);
         mSaveButton.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View v) {
-                saveDatabase();
+                saveGeoPackage();
             }
         });
 
         mLocationClient = LocationServices.getFusedLocationProviderClient(this);
-    }
-
-    private void saveDatabase() {
-        GeoDataContext ctx = new GeoDataContext(this);
-        String dbName = mDatabaseName.getText().toString();
-        findViewById(R.id.main_layout_geo_package).requestFocus();
-        if(ValidationUtils.isValidDBName(dbName)) {
-            ctx.createPackage(mDatabaseName.getText().toString());
-            this.finish();
-        }
-        else {
-            Toast.makeText(this, "Invalid Geo Package Name - Name can only contain lower case letters and numbers and must begin with a letter and be between 3 and 20 characters long.", Toast.LENGTH_LONG).show();
-        }
     }
 
     private void refreshGeoPackageRegion() {
@@ -170,4 +142,23 @@ public class GeoPackageActivity extends AppCompatActivity
             refreshGeoPackageRegion();
         }
     };
+
+    private void saveGeoPackage() {
+        GeoDataContext ctx = new GeoDataContext(this);
+        String dbName = mDatabaseName.getText().toString();
+        findViewById(R.id.main_layout_geo_package).requestFocus();
+        if(ValidationUtils.isValidDBName(dbName)) {
+            LatLng northWest = new LatLng(Math.max(mStartLocation.getPosition().latitude, mEndLocation.getPosition().latitude),
+                    Math.min(mStartLocation.getPosition().longitude, mEndLocation.getPosition().longitude));
+
+            LatLng southEast = new LatLng(Math.min(mStartLocation.getPosition().latitude, mEndLocation.getPosition().latitude),
+                    Math.max(mStartLocation.getPosition().longitude, mEndLocation.getPosition().longitude));
+
+            ctx.createPackage(mDatabaseName.getText().toString(), northWest, southEast);
+            this.finish();
+        }
+        else {
+            Toast.makeText(this, "Invalid Geo Package Name - Name can only contain lower case letters and numbers and must begin with a letter and be between 3 and 20 characters long.", Toast.LENGTH_LONG).show();
+        }
+    }
 }

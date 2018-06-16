@@ -6,34 +6,44 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".activities.MainActivity">
+
+    <TextView
+        android:id="@+id/textview_current_dbname"
+        android:layout_width="wrap_content"
+        android:textSize="16pt"
+        android:text="SELECT A DB"
+        android:layout_height="wrap_content" />
+
     <LinearLayout
-        android:layout_margin="20dp"
-        android:orientation="vertical"
+        android:id="@+id/main_options_menu"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-        <TextView
-            android:id="@+id/textview_current_dbname"
-            android:layout_width="wrap_content"
-            android:textSize="16pt"
-            android:text="SELECT A DB"
-            android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textview_current_dbname">
+
         <Button
-            android:layout_gravity="center_horizontal"
-            android:layout_width="120dp"
+            android:id="@+id/button_show_databases"
+            android:layout_width="160dp"
             android:layout_height="48dp"
-            android:text="Databases"
-            android:id="@+id/button_show_databases"  />
+            android:layout_gravity="center_horizontal"
+            android:text="Databases" />
+
         <Button
-            android:layout_gravity="center_horizontal"
-            android:layout_width="120dp"
+            android:id="@+id/button_show_sensor_hubs"
+            android:layout_width="160dp"
             android:layout_height="48dp"
-            android:text="Sensor Hubs"
-            android:id="@+id/button_show_sensor_hubs" />
-        <Button
             android:layout_gravity="center_horizontal"
-            android:layout_width="120dp"
-            android:layout_height="48dp"
-            android:id="@+id/button_show_maps"
-            android:text="Show Map" />
+            android:text="Sensor Hubs" />
     </LinearLayout>
+
+
+    <ListView
+        android:id="@+id/main_list_contents"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@+id/main_options_menu" />
+
 </android.support.constraint.ConstraintLayout>

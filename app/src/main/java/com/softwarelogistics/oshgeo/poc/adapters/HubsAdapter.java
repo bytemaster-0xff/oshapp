@@ -18,18 +18,28 @@ import com.softwarelogistics.oshgeo.poc.models.OpenSensorHub;
 import java.util.List;
 
 public class HubsAdapter extends ArrayAdapter<OpenSensorHub> {
-    int mRowResourceId;
-    Typeface mFontAwesome;
-    List<OpenSensorHub> mHubs;
+    private int mRowResourceId;
+    private Typeface mFontAwesome;
+    private List<OpenSensorHub> mHubs;
+    private RemoveHubHandler mRemoveHubHandler;
 
-    public HubsAdapter(@NonNull Context context, int resource, List<OpenSensorHub> hubs) {
+    public HubsAdapter(@NonNull Context context, int resource, List<OpenSensorHub> hubs, RemoveHubHandler removeHubHandler) {
         super(context, resource, hubs);
         mRowResourceId = resource;
 
         mHubs = hubs;
         AssetManager assets = context.getAssets();
         mFontAwesome = Typeface.createFromAsset(assets, "fonts/fa-regular-400.ttf");
+        mRemoveHubHandler = removeHubHandler;
     }
+
+    TextView.OnClickListener removeHandler = new TextView.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+        OpenSensorHub hub = mHubs.get((Integer) view.getTag());
+        mRemoveHubHandler.onRemoveHub(hub);
+        }
+    };
 
     @NonNull
     @Override
@@ -43,7 +53,7 @@ public class HubsAdapter extends ArrayAdapter<OpenSensorHub> {
 
         TextView removeDb = row.findViewById(R.id.row_db_textview_remove_hub);
         removeDb.setTag(position);
-//        removeDb.setOnClickListener(removeHandler);
+        removeDb.setOnClickListener(removeHandler);
         removeDb.setTypeface(mFontAwesome);
 
         return row;

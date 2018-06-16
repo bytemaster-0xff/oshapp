@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:padding="15dp"
+    android:orientation="horizontal"
+    android:layout_height="64dp">
+    <TextView
+        android:textSize="26dp"
+        android:text="DATABASENAME"
+        android:id="@+id/row_geo_package_contents_text_view_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:textSize="26dp"
+        android:text="DATATYPE"
+        android:id="@+id/row_geo_package_contents_text_view_type"
+        android:layout_alignParentRight="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:textSize="18dp"
+        android:id="@+id/row_geo_package_contents_text_view_description"
+        android:layout_width="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_height="wrap_content" />
+</RelativeLayout >
