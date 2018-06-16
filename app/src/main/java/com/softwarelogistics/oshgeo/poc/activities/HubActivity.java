@@ -1,5 +1,7 @@
 package com.softwarelogistics.oshgeo.poc.activities;
 
+import android.content.Intent;
+import android.location.Location;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -53,7 +55,8 @@ public class HubActivity extends AppCompatActivity {
     }
 
     private void setLocation() {
-
+        Intent pickLocationIntent = new Intent(this, LocationPicker.class);
+        startActivityForResult(pickLocationIntent, 102);
     }
 
     private void saveHub() {

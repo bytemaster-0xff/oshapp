@@ -21,7 +21,6 @@
         android:windowSoftInputMode="stateHidden"
         tools:replace="android:allowBackup">
 
-
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
@@ -50,12 +49,24 @@
             </intent-filter>
         </activity>
         <activity android:name=".activities.MapsActivity" />
-        <activity android:name=".activities.GeoPackagesActivity" android:label="@string/title_activity_geo_packages" />
-        <activity android:name=".activities.GeoPackageActivity"  android:label="@string/title_activity_geo_package" />
-        <activity android:name=".activities.HubsActivity" android:label="@string/title_activity_osh_hubs"  />
-        <activity android:name=".activities.HubActivity" android:label="@string/title_activity_osh_hub"  />
-        <activity android:name=".activities.Sensors" android:label="@string/title_activity_osh_sensors"  />
-        <activity android:name=".activities.SensorDetail"></activity>
+        <activity
+            android:name=".activities.GeoPackagesActivity"
+            android:label="@string/title_activity_geo_packages" />
+        <activity
+            android:name=".activities.GeoPackageActivity"
+            android:label="@string/title_activity_geo_package" />
+        <activity
+            android:name=".activities.HubsActivity"
+            android:label="@string/title_activity_osh_hubs" />
+        <activity
+            android:name=".activities.HubActivity"
+            android:label="@string/title_activity_osh_hub" />
+        <activity
+            android:name=".activities.Sensors"
+            android:label="@string/title_activity_osh_sensors" />
+        <activity android:name=".activities.SensorDetail" />
+        <activity android:name=".activities.LocationPicker" />
+        <activity android:name=".activities.GeoRegionSelector"></activity>
     </application>
 
 </manifest>

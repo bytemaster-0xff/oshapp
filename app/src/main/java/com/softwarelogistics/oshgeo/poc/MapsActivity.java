@@ -56,19 +56,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private GoogleMap mMap;
 
-    private static final String ID_COLUMN = "id";
-    private static final String GEOMETRY_COLUMN = "geometry";
-    private static final String TEXT_COLUMN = "text";
-    private static final String REAL_COLUMN = "real";
-    private static final String BOOLEAN_COLUMN = "boolean";
-    private static final String BLOB_COLUMN = "blob";
-    private static final String INTEGER_COLUMN = "integer";
-    private static final String TEXT_LIMITED_COLUMN = "text_limited";
-    private static final String BLOB_LIMITED_COLUMN = "blob_limited";
-    private static final String DATE_COLUMN = "date";
-    private static final String DATETIME_COLUMN = "datetime";
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

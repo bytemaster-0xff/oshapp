@@ -1,6 +1,9 @@
 package com.softwarelogistics.oshgeo.poc.activities;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -16,6 +19,9 @@ public class MainActivity extends AppCompatActivity {
     Button mShowMap;
     TextView mCurrentDBName;
     String mCurrentPackageName;
+
+    final  int FINE_LOCATION_PERMISSION_REQUEST = 900;
+    boolean hasLocationPermissions = false;
 
     public final static String EXTRA_DB_NAME = "SELECTEDDBNAME";
 
@@ -52,6 +58,35 @@ public class MainActivity extends AppCompatActivity {
 
         mCurrentDBName = findViewById(R.id.textview_current_dbname);
         mCurrentDBName.setText("Please Open or Create a Database");
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            hasLocationPermissions = false;
+            mShowDatabases.setVisibility(View.INVISIBLE);
+            requestLocationPermissions();
+        }
+        else {
+            hasLocationPermissions = true;
+        }
+    }
+
+    private void requestLocationPermissions() {
+        ActivityCompat.requestPermissions(  this,
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION},
+                FINE_LOCATION_PERMISSION_REQUEST);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case FINE_LOCATION_PERMISSION_REQUEST: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    hasLocationPermissions = true;
+                    mShowDatabases.setVisibility(View.VISIBLE);
+                }
+            }
+        }
     }
 
     private void showMap() {

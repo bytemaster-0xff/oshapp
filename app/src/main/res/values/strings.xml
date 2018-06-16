@@ -7,7 +7,7 @@
     <string name="title_activity_osh_sensors">Sensors</string>
 
     <string name="title_activity_main">SOFWERX - OpenSensorHub/Geo POC</string>
-     <!-- Icon to Unicode mapping https://fontawesome.com/icons?d=gallery -->
+    <!-- Icon to Unicode mapping https://fontawesome.com/icons?d=gallery -->
     <string name="icon_trash">&#xf2ed;</string>
     <string name="icon_add">&#xf0fe;</string>
 </resources>

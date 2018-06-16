@@ -1,7 +1,5 @@
 package com.softwarelogistics.oshgeo.poc.repos;
 
-import java.util.List;
-
 import mil.nga.geopackage.GeoPackage;
 
 public class GeoPackageDataContext {
@@ -13,7 +11,7 @@ public class GeoPackageDataContext {
 
     public void createTables() {
         OSHDataContext oshDataContext = new OSHDataContext(mGeoPackage);
-        oshDataContext.createTable();
+        oshDataContext.createTables();
     }
 
     public OSHDataContext getOSHDataContext() {

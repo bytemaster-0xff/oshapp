@@ -1,5 +1,6 @@
 package com.softwarelogistics.oshgeo.poc.repos;
 
+import com.softwarelogistics.oshgeo.poc.models.GeoLocation;
 import com.softwarelogistics.oshgeo.poc.models.OpenSensorHub;
 import com.softwarelogistics.oshgeo.poc.models.Sensor;
 import com.softwarelogistics.oshgeo.poc.models.SensorReading;
@@ -28,9 +29,6 @@ import mil.nga.geopackage.features.user.FeatureDao;
 import mil.nga.geopackage.features.user.FeatureRow;
 import mil.nga.geopackage.features.user.FeatureTable;
 import mil.nga.geopackage.geom.GeoPackageGeometryData;
-import mil.nga.geopackage.map.geom.GoogleMapShape;
-import mil.nga.geopackage.map.geom.GoogleMapShapeConverter;
-import mil.nga.sf.Geometry;
 import mil.nga.sf.GeometryType;
 import mil.nga.sf.Point;
 import mil.nga.sf.proj.ProjectionConstants;
@@ -47,7 +45,7 @@ public class OSHDataContext {
 
     static final String HUB_TABLE_NAME = "oshhubs";
     static final String HUB_COL_SSID = "ssid";
-    static final String HUB_COL_PWD = "pwd";
+    static final String HUB_COL_SSID_PASSWORD = "pwd";
     static final String HUB_COL_IP = "ipaddress";
     static final String HUB_COL_IMAGE = "image";
 
@@ -61,6 +59,7 @@ public class OSHDataContext {
     static final String READING_TABLE_NAME = "sensor_readings";
     static final String READING_COL_SENSOR_ID = "sensor_id";
 
+    static final String VALUE_CURRENT_TABLE_NAME = "current_sensor_values";
     static final String VALUE_TABLE_NAME = "sensor_values";
     static final String VALUE_COL_READING_ID = "reading_id";
     static final String VALUE_COL_SENSOR_ID = "sensor_id";
@@ -97,13 +96,14 @@ public class OSHDataContext {
         return hubs;
     }
 
-    public boolean createTable() {
+    public boolean createTables() {
         try {
             mGeoPackage.createGeometryColumnsTable();
             createHubsTable();
             createSensorsTable();
             createReadingsTable();
             createValuesTable();
+            createCurrentValuesTable();
             return true;
         }
         catch(SQLException ex) {
@@ -123,7 +123,7 @@ public class OSHDataContext {
         columns.add(FeatureColumn.createGeometryColumn(idx++, COL_GEOMETRY, GeometryType.POINT, true, null));
         columns.add(FeatureColumn.createColumn(idx++, COL_NAME, GeoPackageDataType.TEXT,true, ""));
         columns.add(FeatureColumn.createColumn(idx++, HUB_COL_SSID, GeoPackageDataType.TEXT,true, ""));
-        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_PWD, GeoPackageDataType.TEXT,false, ""));
+        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_SSID_PASSWORD, GeoPackageDataType.TEXT,false, ""));
         columns.add(FeatureColumn.createColumn(idx++, HUB_COL_IP, GeoPackageDataType.TEXT,true, ""));
         columns.add(FeatureColumn.createColumn(idx++, HUB_COL_IMAGE, GeoPackageDataType.BLOB,false, null));
         FeatureTable tbl = new FeatureTable(HUB_TABLE_NAME, columns);
@@ -221,22 +221,210 @@ public class OSHDataContext {
         mGeoPackage.createAttributesTable(VALUE_TABLE_NAME, columns);
     }
 
-    public boolean addHub(OpenSensorHub hub) {
-        try
-        {
-            FeatureDao dao = mGeoPackage.getFeatureDao(HUB_TABLE_NAME);
-            FeatureRow newRow = dao.newRow();
+    /**
+     * The most recent values for the sensor
+     */
+    private void createCurrentValuesTable() {
+        List<AttributesColumn> columns = new ArrayList<>();
 
+        int columnNumber = 0;
+        columns.add(AttributesColumn.createPrimaryKeyColumn(columnNumber++, COL_ID));
+        columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_SENSOR_ID, GeoPackageDataType.INT, true, null));
+        columns.add(AttributesColumn.createColumn(columnNumber++, COL_TIMESTAMP, GeoPackageDataType.INT, true, null));
+        columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_LABEL, GeoPackageDataType.TEXT, true, null));
+        columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_DATA_TYPE, GeoPackageDataType.TEXT, true, null));
+        columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_STR_VALUE, GeoPackageDataType.TEXT, false, null));
+        columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_DATE_VALUE, GeoPackageDataType.DATETIME, false, null));
+        columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_MEDIA_VALUE, GeoPackageDataType.BLOB, false, null));
+        columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_NUMB_VALUE, GeoPackageDataType.DOUBLE, false, null));
+        columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_UNITS, GeoPackageDataType.TEXT, false, null));
+
+        mGeoPackage.createAttributesTable(VALUE_CURRENT_TABLE_NAME, columns);
+    }
+
+    private SensorReading readingFromAttrRow(AttributesRow row) {
+        SensorReading reading = new SensorReading();
+        reading.Id = row.getId();
+        reading.Timestamp = (java.sql.Date)row.getValue(COL_TIMESTAMP);
+        reading.SensorId = (long)row.getValue(COL_ID);
+        return reading;
+    }
+
+
+    private AttributesRow valueToAttrRow(SensorValue value, AttributesRow row ){
+        row.setValue(VALUE_COL_DATA_TYPE, value.DataType);
+        row.setValue(COL_NAME, value.Name);
+        row.setValue(COL_TIMESTAMP, value.Timestamp);
+        row.setValue(VALUE_COL_LABEL, value.Label);
+        row.setValue(VALUE_COL_NUMB_VALUE, value.NumbValue);
+        row.setValue(VALUE_COL_DATE_VALUE, value.DateValue);
+        row.setValue(VALUE_COL_MEDIA_VALUE, value.MediaValue);
+        row.setValue(VALUE_COL_STR_VALUE, value.StrValue);
+        row.setValue(VALUE_COL_UNITS, value.Units);
+        return row;
+    }
+
+    private SensorValue valueFromAttrRow(AttributesRow row) {
+        SensorValue sensorValue = new SensorValue();
+        sensorValue.Id = (long)row.getValue(COL_ID);
+        sensorValue.SensorId = (long)row.getValue(VALUE_COL_SENSOR_ID);
+        sensorValue.Timestamp = (java.sql.Date)row.getValue(COL_TIMESTAMP);
+        sensorValue.Name = row.getValue(COL_NAME).toString();
+        sensorValue.Label = row.getValue(VALUE_COL_LABEL).toString();
+        sensorValue.DataType = row.getValue(VALUE_COL_DATA_TYPE).toString();
+
+        Object readingValue = row.getValue(VALUE_COL_READING_ID);
+        if(readingValue != null){
+            sensorValue.ReadingId = (long)readingValue;
+        }
+
+        Object dateValue = row.getValue(VALUE_COL_DATE_VALUE);
+        if(dateValue != null) {
+            sensorValue.DateValue = (java.sql.Date)dateValue;
+        }
+
+        Object strValue = row.getValue(VALUE_COL_STR_VALUE);
+        if(strValue != null){
+            sensorValue.StrValue = strValue.toString();
+        }
+
+        Object numbValue = row.getValue(VALUE_COL_NUMB_VALUE);
+        if(numbValue != null){
+            sensorValue.NumbValue = (double)numbValue;
+        }
+
+        Object mediaValue = row.getValue(VALUE_COL_MEDIA_VALUE);
+        if(mediaValue != null){
+            sensorValue.MediaValue = (byte[])mediaValue;
+        }
+
+        Object unitsValue = row.getValue(VALUE_COL_UNITS);
+        if(unitsValue != null) {
+            sensorValue.Units = unitsValue.toString();
+        }
+
+        return sensorValue;
+    }
+
+
+    private Sensor sensorFromFeatureRow(FeatureRow row) {
+        Sensor sensor = new Sensor();
+        sensor.HubId = (long)row.getValue(SNSR_HUB_ID);
+        sensor.Name = row.getValue(COL_NAME).toString();
+        sensor.SensorType = row.getValue(SNSR_COL_SNSR_TYPE).toString();
+        sensor.SensorId = row.getValue(SNSR_COL_SNSR_TYPE).toString();
+        Object lastContact = row.getValue(SNSR_COL_LAST_CONTACT);
+        if(lastContact != null) {
+            sensor.LastContact = (java.sql.Date)lastContact;
+        }
+        sensor.Id = row.getId();
+        return sensor;
+    }
+
+    private FeatureRow sensorToFeatureRow(Sensor sensor, FeatureRow row){
+        row.setValue(COL_NAME, sensor.Name);
+        row.setValue(SNSR_HUB_ID, sensor.HubId);
+        row.setValue(SNSR_COL_SNSR_ID, sensor.SensorId);
+        row.setValue(SNSR_COL_SNSR_TYPE, sensor.SensorType);
+        if (sensor.LastContact != null) {
+            row.setValue(SNSR_COL_LAST_CONTACT, sensor.LastContact);
+        }
+
+        return row;
+    }
+
+
+    private OpenSensorHub hubFromFeatureRow(FeatureRow row) {
+        OpenSensorHub hub = new OpenSensorHub();
+        hub.Id = row.getId();
+        hub.Name = row.getValue(COL_NAME).toString();
+        hub.IPAddress = row.getValue(HUB_COL_IP).toString();
+        hub.SSIDPassword = row.getValue(HUB_COL_SSID_PASSWORD).toString();
+        hub.SSID = row.getValue(HUB_COL_SSID).toString();
+        hub.Location = new GeoLocation();
+        GeoPackageGeometryData geometryData = row.getGeometry();
+        Point point = (Point)geometryData.getGeometry();
+        hub.Location.Latitude = point.getX();
+        hub.Location.Longitude = point.getY();
+
+        return hub;
+    }
+
+    private FeatureRow hubToFeatureRow(OpenSensorHub hub, FeatureRow row)  {
+        try {
             GeoPackageGeometryData geometryData = new GeoPackageGeometryData(getSrs().getSrsId());
             Point pt = new Point(hub.Location.Longitude, hub.Location.Longitude);
             geometryData.setGeometry(pt);
-            newRow.setGeometry(geometryData);
-            newRow.setValue(COL_NAME, hub.Name);
-            newRow.setValue(HUB_COL_IP, hub.IPAddress);
-            newRow.setValue(HUB_COL_SSID, hub.SSID);
-            newRow.setValue(HUB_COL_PWD, hub.SSIDPassword);
+            row.setGeometry(geometryData);
+            row.setValue(COL_NAME, hub.Name);
+            row.setValue(HUB_COL_IP, hub.IPAddress);
+            row.setValue(HUB_COL_SSID, hub.SSID);
+            row.setValue(HUB_COL_SSID_PASSWORD, hub.SSIDPassword);
+            return row;
+        }
+        catch(SQLException ex){
+            return null;
+        }
+    }
 
-            dao.create(newRow);
+
+    public OpenSensorHub addHub(OpenSensorHub hub) {
+        FeatureDao dao = mGeoPackage.getFeatureDao(HUB_TABLE_NAME);
+        FeatureRow newRow = dao.newRow();
+        dao.create(hubToFeatureRow(hub, newRow));
+        hub.Id = newRow.getId();
+        return hub;
+    }
+
+    public OpenSensorHub getHub(long hubId) {
+        FeatureDao hubDao = mGeoPackage.getFeatureDao(HUB_TABLE_NAME);
+        FeatureCursor hubCursor = hubDao.queryForId(hubId);
+        try {
+
+            if (hubCursor.moveToNext()) {
+                return hubFromFeatureRow(hubCursor.getRow());
+            }
+        }
+        finally {
+            hubCursor.close();
+        }
+
+        return new OpenSensorHub();
+    }
+
+    public void updateHub(OpenSensorHub updatedHub) {
+        FeatureDao hubDao = mGeoPackage.getFeatureDao(HUB_TABLE_NAME);
+        FeatureCursor hubCursor = hubDao.queryForId(updatedHub.Id);
+        try {
+
+            if (hubCursor.moveToNext()) {
+                FeatureRow row = hubCursor.getRow();
+                hubToFeatureRow(updatedHub, row);
+                hubDao.update(row);
+            }
+        }
+        finally {
+            hubCursor.close();
+        }
+    }
+
+    public void removeHub(OpenSensorHub hub) {
+        FeatureDao hubDao = mGeoPackage.getFeatureDao(HUB_TABLE_NAME);
+        hubDao.deleteById(hub.Id);
+    }
+
+
+    public boolean addSensor(OpenSensorHub hub, Sensor sensor) {
+        try
+        {
+            FeatureDao dao = mGeoPackage.getFeatureDao(SNSR_TABLE_NAME);
+            FeatureRow newRow = dao.newRow();
+
+            Point pt = new Point(hub.Location.Longitude, hub.Location.Longitude);
+            GeoPackageGeometryData geometryData = new GeoPackageGeometryData(getSrs().getSrsId());
+            geometryData.setGeometry(pt);
+            newRow.setGeometry(geometryData);
+            dao.create(sensorToFeatureRow(sensor, newRow));
 
             return true;
         }
@@ -245,31 +433,45 @@ public class OSHDataContext {
         }
     }
 
-    public boolean addSensor(OpenSensorHub hub, Sensor sensor) {
-        try
-        {
-            FeatureDao dao = mGeoPackage.getFeatureDao(SNSR_TABLE_NAME);
-            FeatureRow newRow = dao.newRow();
-
-            GeoPackageGeometryData geometryData = new GeoPackageGeometryData(getSrs().getSrsId());
-            Point pt = new Point(hub.Location.Longitude, hub.Location.Longitude);
-            geometryData.setGeometry(pt);
-            newRow.setGeometry(geometryData);
-            newRow.setValue(COL_NAME, sensor.Name);
-            newRow.setValue(SNSR_HUB_ID, hub.Id);
-            newRow.setValue(SNSR_COL_SNSR_ID, sensor.SensorId);
-            newRow.setValue(SNSR_COL_SNSR_TYPE, sensor.SensorType);
-            if(sensor.LastContact != null) {
-                newRow.setValue(SNSR_COL_LAST_CONTACT, sensor.LastContact);
+    public List<Sensor> getSensors(int hubId) {
+        List<Sensor> sensors = new ArrayList<>();
+        FeatureDao sensorsDao = mGeoPackage.getFeatureDao(SNSR_TABLE_NAME);
+        FeatureCursor sensorsCursor = sensorsDao.queryForEq(SNSR_HUB_ID, hubId);
+        try{
+            while(sensorsCursor.moveToNext()){
+                sensors.add(sensorFromFeatureRow(sensorsCursor.getRow()));
             }
-
-            dao.create(newRow);
-
-            return true;
         }
-        catch(SQLException ex){
-            return false;
+        finally {
+            sensorsCursor.close();
         }
+
+        return sensors;
+    }
+
+    public Sensor findSensor(String sensorId) {
+        FeatureDao sensorsDao = mGeoPackage.getFeatureDao(SNSR_TABLE_NAME);
+        FeatureCursor cursor = sensorsDao.queryForEq(SNSR_COL_SNSR_ID, sensorId);
+        try {
+            if (cursor.moveToNext()) {
+                return sensorFromFeatureRow(cursor.getRow());
+            }
+        }
+        finally {
+            cursor.close();
+        }
+
+        return null;
+    }
+
+    public Sensor findSensor(int sensorId) {
+        FeatureDao sensorsDao = mGeoPackage.getFeatureDao(SNSR_TABLE_NAME);
+        FeatureCursor cursor = sensorsDao.queryForId(sensorId);
+        if(cursor.moveToNext()) {
+            return sensorFromFeatureRow(cursor.getRow());
+        }
+
+        return null;
     }
 
     public boolean addReadings(OpenSensorHub hub, Sensor sensor, List<SensorValue> values) {
@@ -289,26 +491,28 @@ public class OSHDataContext {
 
         AttributesDao readingsDao = mGeoPackage.getAttributesDao(READING_TABLE_NAME);
         AttributesRow readingRow = readingsDao.newRow();
-        readingRow.setValue(COL_TIMESTAMP, timestamp);
-        readingRow.setValue(READING_COL_SENSOR_ID, sensor.Id);
         readingsDao.create(readingRow);
 
-        AttributesDao attrsDao = mGeoPackage.getAttributesDao(VALUE_TABLE_NAME);
+        AttributesDao valuesDao = mGeoPackage.getAttributesDao(VALUE_TABLE_NAME);
 
         for(SensorValue value : values) {
-            AttributesRow row = attrsDao.newRow();
-            row.setValue(VALUE_COL_DATA_TYPE, value.DataType);
-            row.setValue(COL_NAME, value.Name);
-            row.setValue(COL_TIMESTAMP, value.Timestamp);
+            AttributesRow row = valuesDao.newRow();
+            row.setValue(COL_TIMESTAMP, timestamp);
             row.setValue(VALUE_COL_SENSOR_ID, sensor.Id);
             row.setValue(VALUE_COL_READING_ID, readingRow.getId());
-            row.setValue(VALUE_COL_LABEL, value.Label);
-            row.setValue(VALUE_COL_NUMB_VALUE, value.NumbValue);
-            row.setValue(VALUE_COL_DATE_VALUE, value.DateValue);
-            row.setValue(VALUE_COL_MEDIA_VALUE, value.MediaValue);
-            row.setValue(VALUE_COL_STR_VALUE, value.StrValue);
-            row.setValue(VALUE_COL_UNITS, value.Units);
-            attrsDao.create(row);
+            valuesDao.create(valueToAttrRow(value, row));
+        }
+
+        AttributesDao currentValuesDao = mGeoPackage.getAttributesDao(VALUE_CURRENT_TABLE_NAME);
+
+        /* Likely a better way of doing this, but since all parameters are either a constant or long, we are safe from SQL Injection attacks */
+        mGeoPackage.execSQL(String.format("delete from %s where %s = %i", VALUE_CURRENT_TABLE_NAME, VALUE_COL_SENSOR_ID, sensor.Id));
+
+        for(SensorValue value : values) {
+            AttributesRow row = currentValuesDao.newRow();
+            row.setValue(COL_TIMESTAMP, timestamp);
+            row.setValue(VALUE_COL_SENSOR_ID, sensor.Id);
+            currentValuesDao.create(valueToAttrRow(value, row));
         }
 
         return true;
@@ -322,11 +526,7 @@ public class OSHDataContext {
         try {
             while (attrCursor.moveToNext()) {
                 AttributesRow row = attrCursor.getRow();
-                SensorReading reading = new SensorReading();
-                reading.Id = (long)row.getValue(COL_ID);
-                reading.SensorId = row.getValue(READING_COL_SENSOR_ID).toString();
-                reading.Timestamp = (java.sql.Date)row.getValue(COL_TIMESTAMP);
-                readings.add(reading);
+                readings.add(readingFromAttrRow(row));
             }
         }
         finally {
@@ -337,132 +537,36 @@ public class OSHDataContext {
     }
 
     public List<SensorValue> getValues(long readingId) {
-        List<SensorValue> readings = new ArrayList<>();
+        List<SensorValue> values = new ArrayList<>();
 
         AttributesDao attrDao = mGeoPackage.getAttributesDao(VALUE_TABLE_NAME);
-        AttributesCursor attrCursor = attrDao.queryForEq(READING_COL_SENSOR_ID, readingId);
+        AttributesCursor attrCursor = attrDao.queryForEq(VALUE_COL_READING_ID, readingId);
         try {
             while (attrCursor.moveToNext()) {
-                AttributesRow row = attrCursor.getRow();
-                SensorValue reading = new SensorValue();
-                reading.Id = (long)row.getValue(COL_ID);
-                reading.SensorId = (long)row.getValue(VALUE_COL_SENSOR_ID);
-                reading.Timestamp = (java.sql.Date)row.getValue(COL_TIMESTAMP);
-                reading.Name = row.getValue(COL_NAME).toString();
-                reading.Label = row.getValue(VALUE_COL_LABEL).toString();
-                reading.DataType = row.getValue(VALUE_COL_DATA_TYPE).toString();
-                Object dateValue = row.getValue(VALUE_COL_DATE_VALUE);
-                if(dateValue != null) {
-                    reading.DateValue = (java.sql.Date)dateValue;
-                }
-
-                Object strValue = row.getValue(VALUE_COL_STR_VALUE);
-                if(strValue != null){
-                    reading.StrValue = strValue.toString();
-                }
-
-                Object numbValue = row.getValue(VALUE_COL_NUMB_VALUE);
-                if(numbValue != null){
-                    reading.NumbValue = (double)numbValue;
-                }
-
-                Object mediaValue = row.getValue(VALUE_COL_MEDIA_VALUE);
-                if(mediaValue != null){
-                    reading.MediaValue = (byte[])mediaValue;
-                }
-
-                Object unitsValue = row.getValue(VALUE_COL_UNITS);
-                if(unitsValue != null) {
-                    reading.Units = unitsValue.toString();
-                }
-
-                readings.add(reading);
+                values.add(valueFromAttrRow(attrCursor.getRow()));
             }
         }
         finally {
             attrCursor.close();
         }
 
-        return readings;
+        return values;
     }
 
-    public Sensor findSensor(String sensorId) {
-        FeatureDao sensorsDao = mGeoPackage.getFeatureDao(SNSR_TABLE_NAME);
-        FeatureCursor cursor = sensorsDao.queryForEq(SNSR_COL_SNSR_ID, sensorId);
-        if(cursor.moveToNext()) {
-            FeatureRow row = cursor.getRow();
+    public List<SensorValue> getSensorCurrentValues(long sensorId) {
+        List<SensorValue> currentValues = new ArrayList<>();
 
-            Sensor sensor = new Sensor();
-            sensor.HubId = (long)row.getValue(SNSR_HUB_ID);
-            sensor.Name = row.getValue(COL_NAME).toString();
-            sensor.SensorType = row.getValue(SNSR_COL_SNSR_TYPE).toString();
-            sensor.SensorId = row.getValue(SNSR_COL_SNSR_TYPE).toString();
-            Object lastContact = row.getValue(SNSR_COL_LAST_CONTACT);
-            if(lastContact != null) {
-                sensor.LastContact = (java.sql.Date)lastContact;
+        AttributesDao attrDao = mGeoPackage.getAttributesDao(VALUE_TABLE_NAME);
+        AttributesCursor attrCursor = attrDao.queryForEq(VALUE_COL_SENSOR_ID, sensorId);
+        try {
+            while (attrCursor.moveToNext()) {
+                currentValues.add(valueFromAttrRow(attrCursor.getRow()));
             }
-            sensor.Id = row.getId();
-            return sensor;
+        }
+        finally {
+            attrCursor.close();
         }
 
-        return null;
-    }
-
-    public Sensor findSensor(int sensorId) {
-        FeatureDao sensorsDao = mGeoPackage.getFeatureDao(SNSR_TABLE_NAME);
-        FeatureCursor cursor = sensorsDao.queryForId(sensorId);
-        if(cursor.moveToNext()) {
-            FeatureRow row = cursor.getRow();
-
-            Sensor sensor = new Sensor();
-            sensor.HubId = (long)row.getValue(SNSR_HUB_ID);
-            sensor.Name = row.getValue(COL_NAME).toString();
-            sensor.SensorType = row.getValue(SNSR_COL_SNSR_TYPE).toString();
-            sensor.SensorId = row.getValue(SNSR_COL_SNSR_TYPE).toString();
-            Object lastContact = row.getValue(SNSR_COL_LAST_CONTACT);
-            if(lastContact != null) {
-                sensor.LastContact = (java.sql.Date)lastContact;
-            }
-            sensor.Id = row.getId();
-            return sensor;
-        }
-
-        return null;
-    }
-
-    public List<Sensor> getSensors(int hubId) {
-        List<Sensor> sensors = new ArrayList<>();
-
-        return sensors;
-    }
-
-    public void updateHub(OpenSensorHub updatedHub) {
-        FeatureDao sensorsDao = mGeoPackage.getFeatureDao(SNSR_TABLE_NAME);
-        FeatureCursor cursor = sensorsDao.queryForId(updatedHub.Id);
-        if(cursor.moveToNext()) {
-            FeatureRow row = cursor.getRow();
-
-            OpenSensorHub existingHub = new OpenSensorHub();
-            existingHub.Name = updatedHub.Name;
-            existingHub.SSID = updatedHub.SSID;
-            existingHub.SSIDPassword = updatedHub.SSIDPassword;
-            existingHub.IPAddress = updatedHub.IPAddress;
-
-
-            Object lastContact = row.getValue(SNSR_COL_LAST_CONTACT);
-            if(lastContact != null) {
-                //sensor.LastContact = (java.sql.Date)lastContact;
-            }
-            existingHub.Id = row.getId();
-        }
-    }
-
-    public OpenSensorHub getHub(long hubId) {
-
-        return new OpenSensorHub();
-    }
-
-    public void removeHub(OpenSensorHub hub) {
-
+        return currentValues;
     }
 }
