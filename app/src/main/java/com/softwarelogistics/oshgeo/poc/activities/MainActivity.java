@@ -14,8 +14,12 @@ import android.widget.Toast;
 
 import com.softwarelogistics.oshgeo.poc.R;
 import com.softwarelogistics.oshgeo.poc.adapters.GeoPackageContentsAdapter;
+import com.softwarelogistics.oshgeo.poc.models.Capabilities;
 import com.softwarelogistics.oshgeo.poc.repos.GeoDataContext;
 import com.softwarelogistics.oshgeo.poc.repos.GeoPackageDataContext;
+import com.softwarelogistics.oshgeo.poc.services.SosClient;
+import com.softwarelogistics.oshgeo.poc.tasks.GetSOSCapabilitiesResponseHandler;
+import com.softwarelogistics.oshgeo.poc.tasks.GetSOSCapabilitiesTask;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -101,6 +105,16 @@ public class MainActivity extends AppCompatActivity {
         Intent myIntent = new Intent(this, HubsActivity.class);
         myIntent.putExtra(MainActivity.EXTRA_DB_NAME, mCurrentPackageName);
         this.startActivityForResult(myIntent, 100);
+
+        GetSOSCapabilitiesTask task = new GetSOSCapabilitiesTask();
+        task.responseHandler = new GetSOSCapabilitiesResponseHandler() {
+            @Override
+            public void gotCapabilities(Capabilities capabilities) {
+
+            }
+        };
+
+        task.execute();
     }
 
     private void showDatabases(){
