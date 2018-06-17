@@ -1,18 +1,34 @@
 package com.softwarelogistics.oshgeo.poc.tasks;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 import com.softwarelogistics.oshgeo.poc.models.Capabilities;
+import com.softwarelogistics.oshgeo.poc.models.ObservationDescriptor;
+import com.softwarelogistics.oshgeo.poc.models.Offering;
 import com.softwarelogistics.oshgeo.poc.services.SosClient;
 
-public class GetSOSCapabilitiesTask extends AsyncTask<Void, Void, Capabilities> {
+public class GetSOSCapabilitiesTask extends AsyncTask<Object, Void, Capabilities> {
     public GetSOSCapabilitiesResponseHandler responseHandler = null;
 
 
     @Override
-    protected Capabilities doInBackground(Void... voids) {
-        SosClient client = new SosClient();
-        return client.loadOSHData("http://10.1.1.244:8181/sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities");
+    protected Capabilities doInBackground(Object... args) {
+        boolean https = (boolean)args[0];
+        String uri = (String)args[1];
+        int port = (int)args[2];
+
+        SosClient client = new SosClient(https, uri, port);
+        Capabilities capabilities = client.loadOSHData();
+
+        for(Offering offering : capabilities.Offerings){
+            Log.d("log.osh", String.format("%s - %s", offering.Name, offering.Procedure));
+
+            ObservationDescriptor descriptor = client.loadObservationDescriptor(offering.Procedure);
+
+        }
+
+        return capabilities;
     }
 
     @Override

@@ -1,6 +1,5 @@
 package com.softwarelogistics.oshgeo.poc.models;
 
-import com.slsys.sensorobservationserverdemo.utils.NodeUtils;
 
 import org.w3c.dom.Node;
 

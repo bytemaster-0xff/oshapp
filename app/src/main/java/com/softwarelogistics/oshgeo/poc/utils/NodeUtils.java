@@ -1,4 +1,4 @@
-package com.slsys.sensorobservationserverdemo.utils;
+package com.softwarelogistics.oshgeo.poc.utils;
 
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;

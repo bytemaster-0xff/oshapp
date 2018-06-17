@@ -1,6 +1,6 @@
 package com.softwarelogistics.oshgeo.poc.models;
 
-import com.slsys.sensorobservationserverdemo.utils.NodeUtils;
+import com.softwarelogistics.oshgeo.poc.utils.NodeUtils;
 
 import org.w3c.dom.Node;
 
@@ -19,7 +19,7 @@ public class Offering {
     public String Name;
     public String Procedure;
     public String Identifier;
-    public GeoFence GeoGence;
+    public GeoFence GeoFence;
 
     public List<ObservableProperty> Properties;
     public List<ObservationType> ObservationTypes;
@@ -68,7 +68,7 @@ public class Offering {
         {
             Node envelope = NodeUtils.findNode(area.getChildNodes(), "Envelope");
             if(envelope != null) {
-                offering.GeoGence = GeoFence.create(envelope);
+                offering.GeoFence = com.softwarelogistics.oshgeo.poc.models.GeoFence.create(envelope);
             }
         }
 

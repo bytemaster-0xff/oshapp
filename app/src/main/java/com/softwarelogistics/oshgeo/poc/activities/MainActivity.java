@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        task.execute();
+        task.execute(false, "10.1.1.244", 8181);
     }
 
     private void showDatabases(){

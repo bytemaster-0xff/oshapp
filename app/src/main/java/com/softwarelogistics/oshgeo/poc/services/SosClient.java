@@ -1,6 +1,8 @@
 package com.softwarelogistics.oshgeo.poc.services;
 
 
+import android.util.Log;
+
 import com.softwarelogistics.oshgeo.poc.models.Capabilities;
 import com.softwarelogistics.oshgeo.poc.models.ObservationDescriptor;
 
@@ -20,6 +22,16 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 public class SosClient  {
+    private boolean mHttps;
+    private String mUri;
+    private int mPort;
+
+    public SosClient(boolean https, String uri, int port){
+        mHttps = https;
+        mUri = uri;
+        mPort = port;
+    }
+
     private String readStringFromURL(String requestURL) throws IOException
     {
         try (Scanner scanner = new Scanner(new URL(requestURL).openStream(),
@@ -30,16 +42,27 @@ public class SosClient  {
         }
     }
 
-    public ObservationDescriptor loadObservationDescriptor(String uri){
+    public ObservationDescriptor loadObservationDescriptor(String procedure){
+        String offeringUrl = String.format("%s://%s:%d/sensorhub/sos?service=SOS&version=2.0&request=DescribeSensor&procedure=%s", mHttps ? "https" : "http", mUri, mPort, procedure);
+
         HttpURLConnection urlConnection = null;
 
         try {
-            String json = readStringFromURL(uri);
-            System.out.print(json);
-            JSONTokener tokener = new JSONTokener(json);
+            URL url = new URL(offeringUrl);
+            urlConnection = (HttpURLConnection) url.openConnection();
 
-            JSONObject obj = new JSONObject(tokener);
-            return ObservationDescriptor.create(obj);
+            InputStream xmlInputStream = urlConnection.getInputStream();
+
+            DocumentBuilderFactory factory =  DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document doc = builder.parse(xmlInputStream);
+            Node node = doc.getFirstChild();
+            ObservationDescriptor capabilities = ObservationDescriptor.create(node);
+            xmlInputStream.close();
+
+            return capabilities;
+
+
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -51,11 +74,13 @@ public class SosClient  {
         return null;
     }
 
-    public Capabilities loadOSHData(String uri) {
+    public Capabilities loadOSHData() {
+        String capabilitiesUrl = String.format("%s://%s:%d/sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities", mHttps ? "https" : "http", mUri, mPort);
+
         HttpURLConnection urlConnection = null;
 
         try {
-            URL url = new URL(uri);
+            URL url = new URL(capabilitiesUrl);
             urlConnection = (HttpURLConnection) url.openConnection();
 
             InputStream xmlInputStream = urlConnection.getInputStream();
