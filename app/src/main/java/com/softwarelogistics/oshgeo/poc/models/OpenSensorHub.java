@@ -5,7 +5,9 @@ import android.net.wifi.WifiConfiguration;
 public class OpenSensorHub {
     public long Id;
     public GeoLocation Location;
-    public String IPAddress;
+    public boolean LocalWiFi;
+    public String URI;
+    public int Port;
     public String Name;
     public String SSID;
     public String SSIDPassword;
@@ -16,4 +18,5 @@ public class OpenSensorHub {
         WifiConfiguration wifi = new WifiConfiguration();
         wifi.SSID = "\"" + SSID + "\"";
     }
+
 }

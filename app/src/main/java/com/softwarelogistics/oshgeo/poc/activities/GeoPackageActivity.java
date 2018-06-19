@@ -28,6 +28,8 @@ import com.softwarelogistics.oshgeo.poc.R;
 import com.softwarelogistics.oshgeo.poc.repos.GeoDataContext;
 import com.softwarelogistics.oshgeo.poc.utils.ValidationUtils;
 
+import java.time.Duration;
+
 public class GeoPackageActivity extends AppCompatActivity
         implements OnMapReadyCallback {
 
@@ -148,6 +150,11 @@ public class GeoPackageActivity extends AppCompatActivity
         String dbName = mDatabaseName.getText().toString();
         findViewById(R.id.main_layout_geo_package).requestFocus();
         if(ValidationUtils.isValidDBName(dbName)) {
+            if(mStartLocation == null || mEndLocation == null){
+                Toast.makeText(this, "Please specify the area for your GeoPackage by clicking on the top left and bottom left of the region on the map.", Toast.LENGTH_LONG).show();
+                return;
+            }
+
             LatLng northWest = new LatLng(Math.max(mStartLocation.getPosition().latitude, mEndLocation.getPosition().latitude),
                     Math.min(mStartLocation.getPosition().longitude, mEndLocation.getPosition().longitude));
 

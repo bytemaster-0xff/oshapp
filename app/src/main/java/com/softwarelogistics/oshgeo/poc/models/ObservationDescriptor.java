@@ -31,8 +31,8 @@ public class ObservationDescriptor {
         Node descriptionNode = NodeUtils.findNode(node.getChildNodes(),"description");
         Node sensorDescription = NodeUtils.findNode(descriptionNode.getChildNodes(),"SensorDescription");
         Node data = NodeUtils.findNode(sensorDescription.getChildNodes(),"data");
-        Node physicalComponent = NodeUtils.findNode(data.getChildNodes(),"PhysicalComponent ");
-        Node outputs = NodeUtils.findNode(physicalComponent.getChildNodes(),"PhysicalComponent ");
+        Node physicalComponent = NodeUtils.findNode(data.getChildNodes(),"PhysicalComponent");
+        Node outputs = NodeUtils.findNode(physicalComponent.getChildNodes(),"PhysicalComponent");
         List<Node> outputNodes = NodeUtils.getMatchingChildren(outputs.getChildNodes(), "output");
 
         for(Node outputNode : outputNodes) {

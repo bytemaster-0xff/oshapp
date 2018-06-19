@@ -66,6 +66,13 @@ public class HubsActivity extends AppCompatActivityBase implements RemoveHubHand
         return true;
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        populateHubs();
+    }
+
     private void showGeoPackageView() {
         Intent intent = new Intent(this, HubActivity.class);
         intent.putExtra(MainActivity.EXTRA_DB_NAME, mGeoPackageName);
@@ -83,8 +90,10 @@ public class HubsActivity extends AppCompatActivityBase implements RemoveHubHand
                         GeoDataContext ctx = new GeoDataContext(HubsActivity.this);
                         OSHDataContext oshCtx = ctx.getOSHDataContext(mGeoPackageName);
                         oshCtx.removeHub(hub);
-                        Toast.makeText(HubsActivity.this, "Database Removed", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(HubsActivity.this, "Hub Removed", Toast.LENGTH_SHORT).show();
+                        populateHubs();
                     }})
                 .setNegativeButton(android.R.string.no, null).show();
+
     }
 }

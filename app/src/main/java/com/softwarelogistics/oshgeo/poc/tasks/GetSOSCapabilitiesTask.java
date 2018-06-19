@@ -20,12 +20,14 @@ public class GetSOSCapabilitiesTask extends AsyncTask<Object, Void, Capabilities
 
         SosClient client = new SosClient(https, uri, port);
         Capabilities capabilities = client.loadOSHData();
+        if(capabilities != null) {
 
         for(Offering offering : capabilities.Offerings){
             Log.d("log.osh", String.format("%s - %s", offering.Name, offering.Procedure));
 
             ObservationDescriptor descriptor = client.loadObservationDescriptor(offering.Procedure);
 
+        }
         }
 
         return capabilities;

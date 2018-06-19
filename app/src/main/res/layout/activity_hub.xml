@@ -5,11 +5,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".activities.HubActivity">
-<LinearLayout
-    android:layout_margin="10dp"
-    android:orientation="vertical"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+    <LinearLayout
+        android:layout_margin="10dp"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
     <TextView
         android:text="Hub Name"
@@ -19,10 +22,23 @@
     <EditText
         android:id="@+id/edit_hub_name"
         android:layout_width="match_parent"
-        android:layout_height="48dp" />
+        android:layout_height="48dp"
+        android:hint="name of hub"
+        android:inputType="textCapSentences" />
 
+    <Switch
+        android:layout_marginTop="10dp"
+        android:id="@+id/edit_hub_private_wifi"
+        android:text="Local WiFi Only"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent" />
+
+    <LinearLayout
+        android:id="@+id/edit_hub_wifi_settings"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
     <TextView
-
         android:text="Hub WiFi SSID"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
@@ -30,10 +46,10 @@
     <EditText
         android:id="@+id/edit_hub_ssid"
         android:layout_width="match_parent"
-        android:layout_height="48dp" />
+        android:layout_height="48dp"
+        android:hint="ssid of hub specific wifi" />
 
     <TextView
-
         android:text="Hub WiFi Password"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
@@ -41,19 +57,40 @@
     <EditText
         android:id="@+id/edit_hub_wifi_pwd"
         android:layout_width="match_parent"
-        android:layout_height="48dp" />
+        android:layout_height="48dp"
+        android:hint="wifi password" />
+    </LinearLayout>
+    <Switch
+        android:layout_marginTop="10dp"
+        android:id="@+id/edit_hub_https"
+        android:text="HTTPS"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent" />
+        <TextView
+            android:text="URL"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
+        <EditText
+            android:id="@+id/edit_hub_ip_addr"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="IP address or domain name"
+            android:inputType="textUri" />
+
+        <TextView
+            android:text="PORT"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <EditText
+            android:id="@+id/edit_hub_port"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="hub port"
+            android:inputType="numberDecimal" />
     <TextView
-        android:text="Hub IP Address"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <EditText
-        android:id="@+id/edit_hub_ip_addr"
-        android:layout_width="match_parent"
-        android:layout_height="48dp" />
-
-    <TextView
+        android:layout_marginTop="10dp"
         android:id="@+id/link_set_location"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -62,14 +99,14 @@
      />
 
     <Button
+        android:layout_marginBottom="20dp"
         android:id="@+id/button_save_hub"
         android:text="Save"
         android:layout_gravity="right"
         android:layout_width="120dp"
         android:layout_height="48dp"
         />
-
-
-</LinearLayout>
+    </LinearLayout>
+    </ScrollView>
 
 </android.support.constraint.ConstraintLayout>
