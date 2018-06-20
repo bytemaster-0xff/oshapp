@@ -6,8 +6,9 @@ public class OpenSensorHub {
     public long Id;
     public GeoLocation Location;
     public boolean LocalWiFi;
+    public boolean SecureConnection;
     public String URI;
-    public int Port;
+    public long Port;
     public String Name;
     public String SSID;
     public String SSIDPassword;

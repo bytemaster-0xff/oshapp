@@ -6,28 +6,22 @@ import android.util.Log;
 import com.softwarelogistics.oshgeo.poc.models.Capabilities;
 import com.softwarelogistics.oshgeo.poc.models.ObservationDescriptor;
 import com.softwarelogistics.oshgeo.poc.models.Offering;
+import com.softwarelogistics.oshgeo.poc.models.OpenSensorHub;
 import com.softwarelogistics.oshgeo.poc.services.SosClient;
 
-public class GetSOSCapabilitiesTask extends AsyncTask<Object, Void, Capabilities> {
+public class GetSOSCapabilitiesTask extends AsyncTask<OpenSensorHub, Void, Capabilities> {
     public GetSOSCapabilitiesResponseHandler responseHandler = null;
 
-
     @Override
-    protected Capabilities doInBackground(Object... args) {
-        boolean https = (boolean)args[0];
-        String uri = (String)args[1];
-        int port = (int)args[2];
-
-        SosClient client = new SosClient(https, uri, port);
+    protected Capabilities doInBackground(OpenSensorHub... hub) {
+        SosClient client = new SosClient(hub[0].SecureConnection,hub[0].URI,hub[0].Port);
         Capabilities capabilities = client.loadOSHData();
         if(capabilities != null) {
+            for(Offering offering : capabilities.Offerings){
+                Log.d("log.osh", String.format("%s - %s", offering.Name, offering.Procedure));
 
-        for(Offering offering : capabilities.Offerings){
-            Log.d("log.osh", String.format("%s - %s", offering.Name, offering.Procedure));
-
-            ObservationDescriptor descriptor = client.loadObservationDescriptor(offering.Procedure);
-
-        }
+                ObservationDescriptor descriptor = client.loadObservationDescriptor(offering.Procedure);
+            }
         }
 
         return capabilities;

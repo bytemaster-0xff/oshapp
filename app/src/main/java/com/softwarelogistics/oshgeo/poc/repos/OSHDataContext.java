@@ -48,6 +48,7 @@ public class OSHDataContext {
     static final String HUB_COL_LOCAL_WIFI = "local_wifi";
     static final String HUB_COL_SSID = "ssid";
     static final String HUB_COL_SSID_PASSWORD = "pwd";
+    static final String HUB_COL_SECURE_CONNECTION = "secure_connection";
     static final String HUB_COL_IP = "ipaddress";
     static final String HUB_COL_IMAGE = "image";
     static final String HUB_COL_PORT = "port";
@@ -158,11 +159,12 @@ public class OSHDataContext {
         columns.add(FeatureColumn.createPrimaryKeyColumn(idx++, COL_ID));
         columns.add(FeatureColumn.createGeometryColumn(idx++, COL_GEOMETRY, GeometryType.POINT, true, null));
         columns.add(FeatureColumn.createColumn(idx++, COL_NAME, GeoPackageDataType.TEXT,true, ""));
-        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_LOCAL_WIFI, GeoPackageDataType.BOOLEAN,false, ""));
+        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_LOCAL_WIFI, GeoPackageDataType.BOOLEAN,true, false));
         columns.add(FeatureColumn.createColumn(idx++, HUB_COL_SSID, GeoPackageDataType.TEXT,false, ""));
-        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_SSID_PASSWORD, GeoPackageDataType.TEXT,false, ""));
+        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_SSID_PASSWORD, GeoPackageDataType.TEXT,false, false));
+        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_SECURE_CONNECTION, GeoPackageDataType.BOOLEAN,true, false));
         columns.add(FeatureColumn.createColumn(idx++, HUB_COL_IP, GeoPackageDataType.TEXT,true, ""));
-        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_PORT, GeoPackageDataType.INT,true, ""));
+        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_PORT, GeoPackageDataType.INT,true, 8181));
         columns.add(FeatureColumn.createColumn(idx++, HUB_COL_IMAGE, GeoPackageDataType.BLOB,false, null));
         FeatureTable tbl = new FeatureTable(HUB_TABLE_NAME, columns);
         mGeoPackage.createFeatureTable(tbl);
@@ -356,10 +358,15 @@ public class OSHDataContext {
     private OpenSensorHub hubFromFeatureRow(FeatureRow row) {
         OpenSensorHub hub = new OpenSensorHub();
         hub.Id = row.getId();
-        hub.Name = row.getValue(COL_NAME).toString();
         hub.LocalWiFi = (boolean)row.getValue(HUB_COL_LOCAL_WIFI);
+
+        hub.SecureConnection = (boolean)row.getValue(HUB_COL_SECURE_CONNECTION);
         hub.URI = row.getValue(HUB_COL_IP).toString();
-        Object ssid = row.getValue(HUB_COL_SSID).toString();
+        hub.Port = (long)row.getValue(HUB_COL_PORT);
+
+        hub.Name = row.getValue(COL_NAME).toString();
+
+        Object ssid = row.getValue(HUB_COL_SSID);
         if(ssid != null){
             hub.SSID = ssid.toString();
         }
@@ -374,7 +381,6 @@ public class OSHDataContext {
         Point point = (Point)geometryData.getGeometry();
         hub.Location.Latitude = point.getX();
         hub.Location.Longitude = point.getY();
-        hub.Port = (int)row.getValue(HUB_COL_PORT);
 
         return hub;
     }
@@ -386,11 +392,12 @@ public class OSHDataContext {
             geometryData.setGeometry(pt);
             row.setGeometry(geometryData);
             row.setValue(COL_NAME, hub.Name);
-            row.setValue(HUB_COL_IP, hub.URI);
             row.setValue(HUB_COL_SSID, hub.SSID);
-            row.setValue(HUB_COL_LOCAL_WIFI, hub.LocalWiFi);
-            row.setValue(HUB_COL_PORT, hub.Port);
             row.setValue(HUB_COL_SSID_PASSWORD, hub.SSIDPassword);
+            row.setValue(HUB_COL_LOCAL_WIFI, hub.LocalWiFi);
+            row.setValue(HUB_COL_SECURE_CONNECTION, hub.SecureConnection);
+            row.setValue(HUB_COL_IP, hub.URI);
+            row.setValue(HUB_COL_PORT, hub.Port);
             return row;
         }
         catch(SQLException ex){

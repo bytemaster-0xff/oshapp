@@ -24,9 +24,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 public class SosClient  {
     private boolean mHttps;
     private String mUri;
-    private int mPort;
+    private long mPort;
 
-    public SosClient(boolean https, String uri, int port){
+    public SosClient(boolean https, String uri, long port){
         mHttps = https;
         mUri = uri;
         mPort = port;
@@ -46,28 +46,36 @@ public class SosClient  {
         String offeringUrl = String.format("%s://%s:%d/sensorhub/sos?service=SOS&version=2.0&request=DescribeSensor&procedure=%s", mHttps ? "https" : "http", mUri, mPort, procedure);
 
         HttpURLConnection urlConnection = null;
+        InputStream xmlInputStream = null;
 
         try {
             URL url = new URL(offeringUrl);
             urlConnection = (HttpURLConnection) url.openConnection();
 
-            InputStream xmlInputStream = urlConnection.getInputStream();
+            xmlInputStream = urlConnection.getInputStream();
 
             DocumentBuilderFactory factory =  DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document doc = builder.parse(xmlInputStream);
             Node node = doc.getFirstChild();
-            ObservationDescriptor capabilities = ObservationDescriptor.create(node);
-            xmlInputStream.close();
-
-            return capabilities;
-
-
+            ObservationDescriptor descriptor = ObservationDescriptor.create(node);
+            Log.d("log.osh", "Got descriptor - ");
+            return descriptor;
         } catch (Exception e) {
+            Log.d("log.osh", "Exception loading descriptor " + e.getLocalizedMessage());
             e.printStackTrace();
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
+            }
+
+            if(xmlInputStream != null){
+                try {
+                    xmlInputStream.close();
+                }
+                catch (Exception ex) {
+
+                }
             }
         }
 
@@ -78,13 +86,13 @@ public class SosClient  {
         String capabilitiesUrl = String.format("%s://%s:%d/sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities", mHttps ? "https" : "http", mUri, mPort);
 
         HttpURLConnection urlConnection = null;
-
+        InputStream xmlInputStream = null;
         try {
+            Log.d("log.osh","Calling capabilities");
             URL url = new URL(capabilitiesUrl);
             urlConnection = (HttpURLConnection) url.openConnection();
 
-            InputStream xmlInputStream = urlConnection.getInputStream();
-
+            xmlInputStream = urlConnection.getInputStream();
             DocumentBuilderFactory factory =  DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document doc = builder.parse(xmlInputStream);
@@ -95,10 +103,20 @@ public class SosClient  {
             return capabilities;
 
         } catch (Exception e) {
+            Log.d("log.osh", "Exception: " + e.getLocalizedMessage());
             e.printStackTrace();
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
+            }
+
+            if(xmlInputStream != null){
+                try {
+                    xmlInputStream.close();
+                }
+                catch (Exception ex) {
+
+                }
             }
         }
 

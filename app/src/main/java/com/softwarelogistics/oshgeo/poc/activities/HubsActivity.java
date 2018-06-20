@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -41,6 +43,14 @@ public class HubsActivity extends AppCompatActivityBase implements RemoveHubHand
 
         mHubs = hubsContext.getHubs();
         mHubsListView = findViewById(R.id.list_hubs);
+        mHubsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                OpenSensorHub hub = mHubs.get(i);
+                openHub(hub.Id);
+            }
+        });
+
         mHubsAdapter = new HubsAdapter(this, R.layout.list_row_sensor_hub, mHubs, this);
 
         mHubsListView.setAdapter(mHubsAdapter);
@@ -60,7 +70,7 @@ public class HubsActivity extends AppCompatActivityBase implements RemoveHubHand
         switch (item.getItemId()) {
             // action with ID action_refresh was selected
             case R.id.action_add_item:
-                showGeoPackageView();
+                addNewHub();
                 break;
         }
         return true;
@@ -73,7 +83,14 @@ public class HubsActivity extends AppCompatActivityBase implements RemoveHubHand
         populateHubs();
     }
 
-    private void showGeoPackageView() {
+    private void openHub(long hubId){
+        Intent intent = new Intent(this, SensorsActivity.class);
+        intent.putExtra(MainActivity.EXTRA_DB_NAME, mGeoPackageName);
+        intent.putExtra(SensorsActivity.EXTRA_HUB_ID, hubId);
+        startActivity(intent);
+    }
+
+    private void addNewHub() {
         Intent intent = new Intent(this, HubActivity.class);
         intent.putExtra(MainActivity.EXTRA_DB_NAME, mGeoPackageName);
         startActivity(intent);

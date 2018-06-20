@@ -133,6 +133,7 @@ public class HubActivity extends AppCompatActivity {
             return;
         }
 
+        hub.SecureConnection = mSecure.isChecked();
         hub.URI = mIPAddress.getText().toString();
         hub.Name = mHubName.getText().toString();
 

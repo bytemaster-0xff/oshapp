@@ -1,5 +1,7 @@
 package com.softwarelogistics.oshgeo.poc.models;
 
+import android.util.Log;
+
 import com.softwarelogistics.oshgeo.poc.utils.NodeUtils;
 
 import org.json.JSONException;
@@ -31,14 +33,16 @@ public class ObservationDescriptor {
         Node descriptionNode = NodeUtils.findNode(node.getChildNodes(),"description");
         Node sensorDescription = NodeUtils.findNode(descriptionNode.getChildNodes(),"SensorDescription");
         Node data = NodeUtils.findNode(sensorDescription.getChildNodes(),"data");
-        Node physicalComponent = NodeUtils.findNode(data.getChildNodes(),"PhysicalComponent");
-        Node outputs = NodeUtils.findNode(physicalComponent.getChildNodes(),"PhysicalComponent");
-        List<Node> outputNodes = NodeUtils.getMatchingChildren(outputs.getChildNodes(), "output");
-
-        for(Node outputNode : outputNodes) {
-
+        Node physical = NodeUtils.findNode(data.getChildNodes(),"PhysicalSystem");
+        if(physical == null) {
+            physical = NodeUtils.findNode(data.getChildNodes(), "PhysicalComponent");
         }
 
+        Node outputsNode = NodeUtils.findNode(physical.getChildNodes(), "outputs");
+        Node outputListNodes = NodeUtils.findNode(outputsNode.getChildNodes(), "OutputList");
+        List<Node> outputNodes = NodeUtils.getMatchingChildren(outputListNodes.getChildNodes(), "output");
+
+//        Node outputs = NodeUtils.findNode(physicalComponent.getChildNodes(),"PhysicalComponent");
 
         /*descriptor.Name = obj.getString("name");
         descriptor.Type = obj.getString("type");

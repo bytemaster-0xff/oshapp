@@ -5,11 +5,11 @@ import android.os.Bundle;
 
 import com.softwarelogistics.oshgeo.poc.R;
 
-public class Sensors extends AppCompatActivity {
+public class SensorActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_sensors);
+        setContentView(R.layout.activity_sensor);
     }
 }

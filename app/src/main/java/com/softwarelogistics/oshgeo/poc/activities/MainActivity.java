@@ -106,15 +106,6 @@ public class MainActivity extends AppCompatActivity {
         myIntent.putExtra(MainActivity.EXTRA_DB_NAME, mCurrentPackageName);
         this.startActivityForResult(myIntent, 100);
 
-        GetSOSCapabilitiesTask task = new GetSOSCapabilitiesTask();
-        task.responseHandler = new GetSOSCapabilitiesResponseHandler() {
-            @Override
-            public void gotCapabilities(Capabilities capabilities) {
-
-            }
-        };
-
-        task.execute(false, "10.1.1.244", 8181);
     }
 
     private void showDatabases(){
