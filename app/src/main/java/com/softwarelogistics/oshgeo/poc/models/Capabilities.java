@@ -13,6 +13,7 @@ public class Capabilities {
     {
         Offerings = new ArrayList<>();
         Operations = new ArrayList<>();
+        Descriptors = new ArrayList<>();
     }
 
     public static Capabilities create(Node node){
@@ -45,4 +46,5 @@ public class Capabilities {
     public ServiceProvider Provider;
     public List<Operation> Operations;
     public List<Offering> Offerings;
+    public List<ObservationDescriptor> Descriptors;
 }

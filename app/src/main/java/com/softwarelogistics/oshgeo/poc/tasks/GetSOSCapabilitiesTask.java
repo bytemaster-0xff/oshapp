@@ -19,8 +19,8 @@ public class GetSOSCapabilitiesTask extends AsyncTask<OpenSensorHub, Void, Capab
         if(capabilities != null) {
             for(Offering offering : capabilities.Offerings){
                 Log.d("log.osh", String.format("%s - %s", offering.Name, offering.Procedure));
-
                 ObservationDescriptor descriptor = client.loadObservationDescriptor(offering.Procedure);
+                capabilities.Descriptors.add(descriptor);
             }
         }
 
