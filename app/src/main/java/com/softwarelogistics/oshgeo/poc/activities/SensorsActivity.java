@@ -1,17 +1,27 @@
 package com.softwarelogistics.oshgeo.poc.activities;
 
 import android.content.Intent;
+import android.media.audiofx.AudioEffect;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 
 import com.softwarelogistics.oshgeo.poc.R;
 import com.softwarelogistics.oshgeo.poc.models.Capabilities;
+import com.softwarelogistics.oshgeo.poc.models.ObservableProperty;
+import com.softwarelogistics.oshgeo.poc.models.ObservationDescriptor;
+import com.softwarelogistics.oshgeo.poc.models.ObservationDescriptorOutput;
+import com.softwarelogistics.oshgeo.poc.models.ObservationType;
+import com.softwarelogistics.oshgeo.poc.models.Offering;
 import com.softwarelogistics.oshgeo.poc.models.OpenSensorHub;
+import com.softwarelogistics.oshgeo.poc.models.Sensor;
 import com.softwarelogistics.oshgeo.poc.repos.GeoDataContext;
 import com.softwarelogistics.oshgeo.poc.repos.GeoPackageDataContext;
 import com.softwarelogistics.oshgeo.poc.repos.OSHDataContext;
 import com.softwarelogistics.oshgeo.poc.tasks.GetSOSCapabilitiesResponseHandler;
 import com.softwarelogistics.oshgeo.poc.tasks.GetSOSCapabilitiesTask;
+
+import java.util.List;
 
 public class SensorsActivity extends AppCompatActivity {
 
@@ -19,6 +29,8 @@ public class SensorsActivity extends AppCompatActivity {
 
     OpenSensorHub mHub;
     String mDatabaseName;
+
+    List<Sensor> mSensors;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,7 +49,24 @@ public class SensorsActivity extends AppCompatActivity {
         task.responseHandler = new GetSOSCapabilitiesResponseHandler() {
             @Override
             public void gotCapabilities(Capabilities capabilities) {
+                for(Offering offering: capabilities.Offerings){
+                    Log.d("log.osh", offering.Name);
+                    for(ObservationType type : offering.ObservationTypes) {
+                        Log.d("log.osh", type.Name);
+                    }
 
+                    for(ObservableProperty prop : offering.Properties) {
+                        Log.d("log.osh", prop.Name);
+                    }
+
+                    Log.d("log.osh","=======================");
+                }
+
+                for(ObservationDescriptor descriptor : capabilities.Descriptors){
+                    Log.d("log.osh", descriptor.Name);
+                    Log.d("log.osh", descriptor.Description);
+                }
+                Log.d("log.osh","=======================");
             }
         };
 

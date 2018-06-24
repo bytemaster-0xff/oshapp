@@ -13,7 +13,6 @@ public class Offering {
     {
         Properties = new ArrayList<>();
         ObservationTypes = new ArrayList<>();
-        Descriptors = new ArrayList<>();
     }
 
     public String Description;
@@ -24,7 +23,6 @@ public class Offering {
 
     public List<ObservableProperty> Properties;
     public List<ObservationType> ObservationTypes;
-    public List<ObservationDescriptor> Descriptors;
 
     public static Offering create(Node node)
     {

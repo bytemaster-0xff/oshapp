@@ -57,7 +57,7 @@ public class NodeUtils {
 
         for(int idx = 0; idx < nodes.getLength(); ++idx){
             Node node = nodes.item(idx);
-            //TODO: Should really add name space support
+            //TODO: Should really add namespace support
             String parts[] = node.getNodeName().split(":");
             if(parts.length == 2){
                 if(parts[1].contentEquals(name)){
@@ -78,7 +78,7 @@ public class NodeUtils {
         Node node = findNode(nodes, name);
 
         if(node == null){
-            return null;
+            return "";
         }
 
         return node.getTextContent();

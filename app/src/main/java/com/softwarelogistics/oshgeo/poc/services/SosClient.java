@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.softwarelogistics.oshgeo.poc.models.Capabilities;
 import com.softwarelogistics.oshgeo.poc.models.ObservationDescriptor;
+import com.softwarelogistics.oshgeo.poc.models.SensorValue;
 
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -16,6 +17,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Scanner;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -119,6 +121,12 @@ public class SosClient  {
                 }
             }
         }
+
+        return null;
+    }
+
+    public List<SensorValue> getSensorValue(ObservationDescriptor descriptors){
+
 
         return null;
     }

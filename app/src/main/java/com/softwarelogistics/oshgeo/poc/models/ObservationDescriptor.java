@@ -15,16 +15,9 @@ public class ObservationDescriptor {
     }
 
     public String Name;
-    public String Identifier;
+    public String Id;
     public List<ObservationDescriptorOutput> Outputs;
     public List<ObservationDescriptorOutput> DataStreams;
-    public String Type;
-    public String Definition;
-    public String Label;
-    public String AxisID;
-    public String ReferenceFrame;
-
-    public UnitOfMeasureDescriptor UnitOfMeasure;
 
     public String ValidTimeStart;
     public String ValidTimeEnd;
@@ -44,8 +37,9 @@ public class ObservationDescriptor {
             physical = NodeUtils.findNode(data.getChildNodes(), "PhysicalComponent");
         }
 
-        descriptor.Name = NodeUtils.getNodeText(physical.getChildNodes(), "Name");
-        descriptor.Description = NodeUtils.getNodeText(physical.getChildNodes(), "Description");
+        descriptor.Name = NodeUtils.getNodeText(physical.getChildNodes(), "name");
+        descriptor.Id = NodeUtils.getNodeText(physical.getChildNodes(), "identifier");
+        descriptor.Description = NodeUtils.getNodeText(physical.getChildNodes(), "description");
 
         Node validTimeNode = NodeUtils.findNode(physical.getChildNodes(), "validTime");
         if(validTimeNode != null) {
