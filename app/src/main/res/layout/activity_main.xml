@@ -32,13 +32,6 @@
             android:text="Databases" />
 
         <Button
-            android:id="@+id/main_button_open_osh"
-            android:layout_width="160dp"
-            android:layout_height="48dp"
-            android:layout_gravity="center_horizontal"
-            android:text="OSH" />
-
-        <Button
             android:id="@+id/button_show_sensor_hubs"
             android:layout_width="160dp"
             android:layout_height="48dp"

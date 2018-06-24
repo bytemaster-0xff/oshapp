@@ -4,12 +4,18 @@ import android.net.wifi.WifiConfiguration;
 
 public class OpenSensorHub {
     public long Id;
+    public String Name;
+
     public GeoLocation Location;
-    public boolean LocalWiFi;
     public boolean SecureConnection;
     public String URI;
     public long Port;
-    public String Name;
+
+    public String HubAuthType;
+    public String HubUserId;
+    public String HubPassword;
+
+    public boolean LocalWiFi;
     public String SSID;
     public String SSIDPassword;
 

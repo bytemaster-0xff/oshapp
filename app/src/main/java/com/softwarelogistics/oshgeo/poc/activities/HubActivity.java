@@ -29,9 +29,13 @@ import java.util.regex.Pattern;
 public class HubActivity extends AppCompatActivity {
     Switch mSecure;
     Switch mPrivateWiFi;
+    Switch mAuthType;
+
+    EditText mHubUserName;
+    EditText mHubUserPassword;
     EditText mHubName;
     EditText mHubSSID;
-    EditText mHubPassword;
+    EditText mHubWiFiPassword;
     EditText mIPAddress;
     EditText mPort;
     Button mSaveHub;
@@ -39,7 +43,9 @@ public class HubActivity extends AppCompatActivity {
     String mGeoPackageName;
 
     LatLng mSensorLocation;
+
     LinearLayout mWiFiSettings;
+    LinearLayout mHubAuthSettings;
 
     final static int SELECTLOCATION_REQUESTION_ID = 202;
 
@@ -53,21 +59,33 @@ public class HubActivity extends AppCompatActivity {
         mSecure.setTextOff("HTTP");
 
         mWiFiSettings = findViewById(R.id.edit_hub_wifi_settings);
-        mWiFiSettings.setVisibility(View.INVISIBLE);
+        mWiFiSettings.setVisibility(View.GONE);
 
         mPrivateWiFi = findViewById(R.id.edit_hub_private_wifi);
         mPrivateWiFi.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                mWiFiSettings.setVisibility(b ? View.VISIBLE : View.INVISIBLE);
+                mWiFiSettings.setVisibility(b ? View.VISIBLE : View.GONE);
             }
         });
         mHubName = findViewById(R.id.edit_hub_name);
         mHubSSID = findViewById(R.id.edit_hub_ssid);
-        mHubPassword = findViewById(R.id.edit_hub_wifi_pwd);
+        mHubWiFiPassword = findViewById(R.id.edit_hub_wifi_pwd);
         mIPAddress = findViewById(R.id.edit_hub_ip_addr);
         mPort = findViewById(R.id.edit_hub_port);
         mPort.setText ("8181");
+
+        mAuthType = findViewById(R.id.edit_hub_requires_password);
+        mAuthType.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                mHubAuthSettings.setVisibility(b ? View.VISIBLE : View.GONE);
+            }
+        });
+        mHubUserName = findViewById(R.id.edit_hub_login_user_name);
+        mHubUserPassword = findViewById(R.id.edit_hub_login_user_password);
+        mHubAuthSettings = findViewById(R.id.edit_hub_password_settings);
+        mHubAuthSettings.setVisibility(View.GONE);
 
         mSetLocation = findViewById(R.id.link_set_location);
         mSetLocation.setOnClickListener(new View.OnClickListener() {
@@ -140,7 +158,17 @@ public class HubActivity extends AppCompatActivity {
         if(mPrivateWiFi.isChecked()) {
             hub.LocalWiFi = mPrivateWiFi.isChecked();
             hub.SSID = mHubSSID.getText().toString();
-            hub.SSIDPassword = mHubPassword.getText().toString();
+            hub.SSIDPassword = mHubWiFiPassword.getText().toString();
+        }
+
+        if(mAuthType.isChecked()){
+            hub.HubPassword = mHubUserPassword.getText().toString();
+            hub.HubUserId = mHubUserName.getText().toString();
+        }
+        else {
+            hub.HubPassword = null;
+            hub.HubUserId = null;
+            hub.HubAuthType = "anonymous";
         }
 
         oshCtx.addHub(hub);
