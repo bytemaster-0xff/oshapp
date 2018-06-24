@@ -125,8 +125,25 @@ public class SosClient  {
         return null;
     }
 
-    public List<SensorValue> getSensorValue(ObservationDescriptor descriptors){
+    public List<SensorValue> getSensorValue(ObservationDescriptor descriptors, String offeringId, String property){
 
+        //String offeringId = "urn:osh:esp8266:dht:attic-sos";
+        //String property = "http://sensorml.com/ont/swe/property/AirTemperature";
+
+        String valueUri = String.format("%s://%s:%d/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=%s&observedProperty=%s&temporalFilter=phenomenonTime,now", mHttps ? "https" : "http", mUri, mPort, offeringId,property);
+
+        Log.d("log.osh","Asking for value");
+        Log.d("log.osh",valueUri);
+        Log.d("log.osh","-------------------------------------------");
+        HttpURLConnection urlConnection = null;
+        InputStream rawValueStream = null;
+        try {
+            String valueInput = readStringFromURL(valueUri);
+            Log.d("log.osh", valueInput);
+        }
+        catch(Exception e) {
+
+        }
 
         return null;
     }

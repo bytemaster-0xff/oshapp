@@ -28,6 +28,7 @@ public class ObservationDescriptorDataField {
     public String UnitOfMeasure;
     public String AxisId;
     public String Name;
+    public String Definition;
 
     public List<ObservationDescriptorDataField> Fields;
 
@@ -36,6 +37,7 @@ public class ObservationDescriptorDataField {
         field.Label = NodeUtils.getNodeText(node.getChildNodes(),"label");
         field.UnitOfMeasure = NodeUtils.getNodeText(node.getChildNodes(),"uom");
         field.Description = NodeUtils.getNodeText(node.getChildNodes(),"description");
+        field.Definition = NodeUtils.getAttrValue(node.getAttributes(), "definition");
         field.FieldType = fieldType;
 
         List<Node> coodNodes = NodeUtils.getMatchingChildren(node.getChildNodes(), "coordinate");
