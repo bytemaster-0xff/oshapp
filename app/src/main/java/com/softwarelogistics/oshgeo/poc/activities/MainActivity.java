@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
         });
         mShowSensorHubs.setVisibility(View.INVISIBLE);
 
-        mContentsListView = findViewById(R.id.main_list_contents);
+      //  mContentsListView = findViewById(R.id.main_list_contents);
 
         mCurrentDBName = findViewById(R.id.textview_current_dbname);
         mCurrentDBName.setText("Please Open or Create a Database");

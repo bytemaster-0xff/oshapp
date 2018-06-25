@@ -8,6 +8,8 @@
 
     <string name="title_activity_main">SOFWERX - OpenSensorHub/Geo POC</string>
     <!-- Icon to Unicode mapping https://fontawesome.com/icons?d=gallery -->
+    <string name="icon_folder">&#xf07C;</string>
     <string name="icon_trash">&#xf2ed;</string>
+    <string name="icon_map">&#xf59f;</string>
     <string name="icon_add">&#xf0fe;</string>
 </resources>

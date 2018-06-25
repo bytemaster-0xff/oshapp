@@ -67,7 +67,10 @@
         <activity android:name=".activities.LocationPicker" />
         <activity android:name=".activities.SensorsActivity" />
         <activity android:name=".activities.SensorActivity" />
-        <activity android:name=".activities.SensorObservation"></activity>
+        <activity android:name=".activities.SensorObservation" />
+        <activity android:name=".activities.FeaturesActivity" />
+        <activity android:name=".activities.FeatureTablesActivity" />
+        <activity android:name=".activities.FeatureActivity"></activity>
     </application>
 
 </manifest>
