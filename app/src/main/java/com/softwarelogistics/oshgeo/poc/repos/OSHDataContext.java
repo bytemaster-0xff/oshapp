@@ -44,7 +44,7 @@ public class OSHDataContext {
     static final String COL_GEOMETRY = "geometry";
     static final String COL_TIMESTAMP = "timestamp";
 
-    static final String HUB_TABLE_NAME = "oshhubs";
+    public static final String HUB_TABLE_NAME = "oshhubs";
     static final String HUB_COL_LOCAL_WIFI = "local_wifi";
     static final String HUB_COL_SSID = "ssid";
     static final String HUB_COL_SSID_PASSWORD = "pwd";
@@ -56,7 +56,7 @@ public class OSHDataContext {
     static final String HUB_COL_IMAGE = "image";
     static final String HUB_COL_PORT = "port";
 
-    static final String SNSR_TABLE_NAME = "sensors";
+    public static final String SNSR_TABLE_NAME = "sensors";
     static final String SNSR_COL_SNSR_ID = "sensor_id";
     static final String SNSR_HUB_ID = "sensor_id";
     static final String SNSR_COL_SNSR_TYPE = "sensor_type";
@@ -155,6 +155,32 @@ public class OSHDataContext {
     }
 
 
+    private void addContentTables(String tableName, String description) throws SQLException
+    {
+        /* Now add maker int the package contents to show where the hubs are */
+        Contents contents = new Contents();
+        contents.setTableName(tableName);
+        contents.setDataType(ContentsDataType.FEATURES);
+        contents.setIdentifier(tableName);
+        contents.setDescription(description);
+        contents.setSrs(getSrs());
+
+        ContentsDao contentsDao = mGeoPackage.getContentsDao();
+        contentsDao.create(contents);
+
+        GeometryColumnsDao geometryColumnsDao = mGeoPackage.getGeometryColumnsDao();
+
+        GeometryColumns geometryColumns = new GeometryColumns();
+        geometryColumns.setContents(contents);
+        geometryColumns.setColumnName(COL_GEOMETRY);
+        geometryColumns.setGeometryType(GeometryType.POINT);
+        geometryColumns.setSrs(getSrs());
+
+        geometryColumns.setZ((byte) 0);
+        geometryColumns.setM((byte) 0);
+
+        geometryColumnsDao.create(geometryColumns);
+    }
 
     private void createHubsTable(LatLng northWest, LatLng southEast) throws SQLException {
         List<FeatureColumn> columns = new ArrayList<>();
@@ -269,6 +295,22 @@ public class OSHDataContext {
         mGeoPackage.createAttributesTable(VALUE_CURRENT_TABLE_NAME, columns);
     }
 
+    public void createFeatureTable(String tableName, String description) {
+        List<FeatureColumn> columns = new ArrayList<>();
+        int idx= 0;
+        columns.add(FeatureColumn.createPrimaryKeyColumn(idx++, COL_ID));
+        columns.add(FeatureColumn.createGeometryColumn(idx++, COL_GEOMETRY, GeometryType.POINT, true, null));
+        FeatureTable tbl = new FeatureTable(tableName, columns);
+        mGeoPackage.createFeatureTable(tbl);
+
+        try {
+            addContentTables(tableName, description);
+        }
+        catch(SQLException ex){
+
+        }
+    }
+
     private SensorReading readingFromAttrRow(AttributesRow row) {
         SensorReading reading = new SensorReading();
         reading.Id = row.getId();
@@ -276,7 +318,6 @@ public class OSHDataContext {
         reading.SensorId = (long)row.getValue(COL_ID);
         return reading;
     }
-
 
     private AttributesRow valueToAttrRow(SensorValue value, AttributesRow row ){
         row.setValue(VALUE_COL_DATA_TYPE, value.DataType);
@@ -471,7 +512,6 @@ public class OSHDataContext {
         FeatureDao hubDao = mGeoPackage.getFeatureDao(HUB_TABLE_NAME);
         hubDao.deleteById(hub.Id);
     }
-
 
     public boolean addSensor(OpenSensorHub hub, Sensor sensor) {
         try

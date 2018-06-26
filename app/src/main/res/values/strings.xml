@@ -12,4 +12,6 @@
     <string name="icon_trash">&#xf2ed;</string>
     <string name="icon_map">&#xf59f;</string>
     <string name="icon_add">&#xf0fe;</string>
+    <string name="icon_features">&#xf1e5;</string>
+    <string name="icon_acquire">&#xf2F1;</string>
 </resources>

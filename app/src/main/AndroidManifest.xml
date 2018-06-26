@@ -70,7 +70,8 @@
         <activity android:name=".activities.SensorObservation" />
         <activity android:name=".activities.FeaturesActivity" />
         <activity android:name=".activities.FeatureTablesActivity" />
-        <activity android:name=".activities.FeatureActivity"></activity>
+        <activity android:name=".activities.FeatureActivity" />
+        <activity android:name=".activities.AcquireActivity"></activity>
     </application>
 
 </manifest>
