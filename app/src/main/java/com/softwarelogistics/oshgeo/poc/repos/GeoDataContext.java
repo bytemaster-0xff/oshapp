@@ -26,7 +26,7 @@ public class GeoDataContext {
 
     public GeoPackageDataContext getPackage(String packageName){
         GeoPackage pkg = mGeoPackageManager.open(packageName);
-        return new GeoPackageDataContext(pkg);
+        return new GeoPackageDataContext(pkg, packageName);
     }
 
     public GeoPackageDataContext createPackage(String packageName, LatLng northWest, LatLng southEast) {
@@ -42,6 +42,6 @@ public class GeoDataContext {
 
     public OSHDataContext getOSHDataContext(String packageName) {
         GeoPackage pkg = mGeoPackageManager.open(packageName);
-        return new OSHDataContext(pkg);
+        return new OSHDataContext(pkg, packageName);
     }
 }
