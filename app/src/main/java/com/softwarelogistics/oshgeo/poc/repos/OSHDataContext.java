@@ -51,6 +51,8 @@ import mil.nga.geopackage.features.user.FeatureRow;
 import mil.nga.geopackage.features.user.FeatureTable;
 import mil.nga.geopackage.geom.GeoPackageGeometryData;
 import mil.nga.geopackage.map.geom.GoogleMapShapeConverter;
+import mil.nga.geopackage.user.custom.UserCustomCursor;
+import mil.nga.geopackage.user.custom.UserCustomRow;
 import mil.nga.sf.GeometryType;
 import mil.nga.sf.Point;
 import mil.nga.sf.proj.ProjectionConstants;
@@ -811,17 +813,6 @@ public class OSHDataContext {
     /*
       https://github.com/ngageoint/geopackage-android/blob/rte/geopackage-sdk/src/androidTest/java/mil/nga/geopackage/test/extension/related/RelatedTablesUtils.java
      */
-    private void createSensorsRelatedTables(String featureTableName) {
-        RelatedTablesExtension relatedTables = new RelatedTablesExtension(mGeoPackage);
-        int columnIndex = 0;
-        List<UserCustomColumn> columns = new ArrayList<>();
-        columns.add(UserCustomColumn.createColumn(columnIndex++, DublinCoreType.DESCRIPTION.getName(), GeoPackageDataType.TEXT, false, null));
-        columns.add(UserCustomColumn.createColumn(columnIndex++, DublinCoreType.TITLE.getName(), GeoPackageDataType.TEXT, false, null));
-
-        UserMappingTable userMappingTable = UserMappingTable.create(getRelatedSensorTableName(featureTableName), columns);
-        relatedTables.addFeaturesRelationship(featureTableName, SNSR_TABLE_NAME, userMappingTable);
-    }
-
 
     private void createHubsRelatedTables(String featureTableName) {
         RelatedTablesExtension relatedTables = new RelatedTablesExtension(mGeoPackage);
@@ -847,6 +838,17 @@ public class OSHDataContext {
         mappingDao.insert(row);
     }
 
+    private void createSensorsRelatedTables(String featureTableName) {
+        RelatedTablesExtension relatedTables = new RelatedTablesExtension(mGeoPackage);
+        int columnIndex = 0;
+        List<UserCustomColumn> columns = new ArrayList<>();
+        columns.add(UserCustomColumn.createColumn(columnIndex++, DublinCoreType.DESCRIPTION.getName(), GeoPackageDataType.TEXT, false, null));
+        columns.add(UserCustomColumn.createColumn(columnIndex++, DublinCoreType.TITLE.getName(), GeoPackageDataType.TEXT, false, null));
+
+        UserMappingTable userMappingTable = UserMappingTable.create(getRelatedSensorTableName(featureTableName), columns);
+        relatedTables.addFeaturesRelationship(featureTableName, SNSR_TABLE_NAME, userMappingTable);
+    }
+
     public void relateFeatureToSensor(String featureTableName, long featureId, long sensorId, String title, String description){
         RelatedTablesExtension relatedTables = new RelatedTablesExtension(mGeoPackage);
         UserMappingDao mappingDao = relatedTables.getMappingDao(getRelatedSensorTableName(featureTableName));
@@ -857,5 +859,20 @@ public class OSHDataContext {
         row.setBaseId(featureId);
         row.setRelatedId(sensorId);
         mappingDao.insert(row);
+    }
+
+    public List<SensorValue> getRelatedSensorValuesForFeature(String baseFeatureTableName, long baseFeatureId){
+        List<SensorValue> currentSensorValues = new ArrayList<>();
+
+        RelatedTablesExtension relatedTables = new RelatedTablesExtension(mGeoPackage);
+        UserMappingDao mappingDao = relatedTables.getMappingDao(getRelatedSensorTableName(baseFeatureTableName));
+
+        UserCustomCursor cursor = mappingDao.queryByBaseId(baseFeatureId);
+        while(cursor.moveToNext()){
+            UserMappingRow row = mappingDao.getRow(cursor.getRow());
+            currentSensorValues.addAll(getSensorCurrentValues(row.getRelatedId()));
+        }
+
+        return currentSensorValues;
     }
 }
