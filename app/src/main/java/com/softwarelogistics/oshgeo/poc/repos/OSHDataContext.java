@@ -1,7 +1,10 @@
 package com.softwarelogistics.oshgeo.poc.repos;
 
+import android.widget.ListView;
+
 import com.google.android.gms.maps.model.LatLng;
 import com.softwarelogistics.oshgeo.poc.models.GeoLocation;
+import com.softwarelogistics.oshgeo.poc.models.MapFeature;
 import com.softwarelogistics.oshgeo.poc.models.OpenSensorHub;
 import com.softwarelogistics.oshgeo.poc.models.Sensor;
 import com.softwarelogistics.oshgeo.poc.models.SensorReading;
@@ -12,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import mil.nga.geopackage.GeoPackage;
+import mil.nga.geopackage.extension.related.dublin.DublinCoreType;
 import mil.nga.geopackage.attributes.AttributesColumn;
 import mil.nga.geopackage.attributes.AttributesCursor;
 import mil.nga.geopackage.attributes.AttributesDao;
@@ -22,14 +26,21 @@ import mil.nga.geopackage.core.contents.ContentsDataType;
 import mil.nga.geopackage.core.srs.SpatialReferenceSystem;
 import mil.nga.geopackage.core.srs.SpatialReferenceSystemDao;
 import mil.nga.geopackage.db.GeoPackageDataType;
+import mil.nga.geopackage.extension.related.RelatedTablesExtension;
 import mil.nga.geopackage.features.columns.GeometryColumns;
 import mil.nga.geopackage.features.columns.GeometryColumnsDao;
 import mil.nga.geopackage.features.user.FeatureColumn;
+import mil.nga.geopackage.extension.related.ExtendedRelation;
+import mil.nga.geopackage.user.custom.UserCustomColumn;
+import mil.nga.geopackage.extension.related.UserMappingDao;
+import mil.nga.geopackage.extension.related.UserMappingRow;
+import mil.nga.geopackage.extension.related.UserMappingTable;
 import mil.nga.geopackage.features.user.FeatureCursor;
 import mil.nga.geopackage.features.user.FeatureDao;
 import mil.nga.geopackage.features.user.FeatureRow;
 import mil.nga.geopackage.features.user.FeatureTable;
 import mil.nga.geopackage.geom.GeoPackageGeometryData;
+import mil.nga.geopackage.map.geom.GoogleMapShapeConverter;
 import mil.nga.sf.GeometryType;
 import mil.nga.sf.Point;
 import mil.nga.sf.proj.ProjectionConstants;
@@ -41,6 +52,7 @@ public class OSHDataContext {
     GeoPackage mGeoPackage;
     static final String COL_ID = "id";
     static final String COL_NAME = "name";
+    static final String COL_DESCRIPTION = "description";
     static final String COL_GEOMETRY = "geometry";
     static final String COL_TIMESTAMP = "timestamp";
 
@@ -295,11 +307,50 @@ public class OSHDataContext {
         mGeoPackage.createAttributesTable(VALUE_CURRENT_TABLE_NAME, columns);
     }
 
+    public List<String> getFeatureTables(){
+        List<String> featureTableNames = new ArrayList<>();
+        try {
+            ContentsDao contentDao = mGeoPackage.getContentsDao();
+            List<Contents> contents = contentDao.queryForAll();
+            for (Contents content : contents) {
+                if (content.getDataType() == ContentsDataType.FEATURES &&
+                        !content.getTableName().equalsIgnoreCase(OSHDataContext.HUB_TABLE_NAME) &&
+                        !content.getTableName().equalsIgnoreCase(OSHDataContext.SNSR_TABLE_NAME)) {
+                    featureTableNames.add(content.getTableName());
+                }
+            }
+        }
+        catch (SQLException ex){ }
+
+        return featureTableNames;
+    }
+
+    public boolean featureTableNameInUse(String tableName){
+        List<String> featureTableNames = new ArrayList<>();
+        try {
+            ContentsDao contentDao = mGeoPackage.getContentsDao();
+            List<Contents> contents = contentDao.queryForAll();
+
+            for (Contents content : contents) {
+                if(tableName.equalsIgnoreCase(content.getTableName())){
+                    return true;
+                }
+            }
+        }
+        catch(SQLException ex){
+
+        }
+
+        return false;
+    }
+
     public void createFeatureTable(String tableName, String description) {
         List<FeatureColumn> columns = new ArrayList<>();
         int idx= 0;
         columns.add(FeatureColumn.createPrimaryKeyColumn(idx++, COL_ID));
         columns.add(FeatureColumn.createGeometryColumn(idx++, COL_GEOMETRY, GeometryType.POINT, true, null));
+        columns.add(FeatureColumn.createColumn(idx++, COL_NAME, GeoPackageDataType.TEXT, true, null));
+        columns.add(FeatureColumn.createColumn(idx++, COL_DESCRIPTION, GeoPackageDataType.TEXT, true, null));
         FeatureTable tbl = new FeatureTable(tableName, columns);
         mGeoPackage.createFeatureTable(tbl);
 
@@ -309,6 +360,35 @@ public class OSHDataContext {
         catch(SQLException ex){
 
         }
+    }
+
+    private MapFeature featureFromFeatureRow(FeatureRow row){
+        MapFeature feature = new MapFeature();
+        feature.Id = row.getId();
+        feature.Name = row.getValue(COL_NAME).toString();
+        feature.Description = row.getValue(COL_DESCRIPTION).toString();
+
+        GeoPackageGeometryData geometryData = row.getGeometry();
+        Point point = (Point)geometryData.getGeometry();
+        feature.Location = new LatLng(point.getY(), point.getX());
+
+        return  feature;
+    }
+
+    private FeatureRow featureRowFromFeature(MapFeature feature, FeatureRow row){
+        try {
+            row.setValue(COL_NAME, feature.Name);
+            row.setValue(COL_DESCRIPTION, feature.Description);
+            Point pt = new Point(feature.Location.longitude, feature.Location.latitude);
+            GeoPackageGeometryData geometryData = new GeoPackageGeometryData(getSrs().getSrsId());
+            geometryData.setGeometry(pt);
+            row.setGeometry(geometryData);
+        }
+        catch (SQLException ex){
+
+        }
+
+        return row;
     }
 
     private SensorReading readingFromAttrRow(AttributesRow row) {
@@ -435,11 +515,9 @@ public class OSHDataContext {
             hub.HubPassword = pwd.toString();
         }
 
-        hub.Location = new GeoLocation();
         GeoPackageGeometryData geometryData = row.getGeometry();
         Point point = (Point)geometryData.getGeometry();
-        hub.Location.Latitude = point.getX();
-        hub.Location.Longitude = point.getY();
+        hub.Location = new LatLng(point.getY(), point.getX());
 
         return hub;
     }
@@ -447,7 +525,7 @@ public class OSHDataContext {
     private FeatureRow hubToFeatureRow(OpenSensorHub hub, FeatureRow row)  {
         try {
             GeoPackageGeometryData geometryData = new GeoPackageGeometryData(getSrs().getSrsId());
-            Point pt = new Point(hub.Location.Longitude, hub.Location.Longitude);
+            Point pt = new Point(hub.Location.longitude, hub.Location.latitude);
             geometryData.setGeometry(pt);
             row.setGeometry(geometryData);
             row.setValue(COL_NAME, hub.Name);
@@ -508,6 +586,46 @@ public class OSHDataContext {
         }
     }
 
+    public void removeFeatureTable(String featureTable) {
+        mGeoPackage.deleteTable(featureTable);
+    }
+
+    public MapFeature addFeature(String featureTable, MapFeature feature){
+        FeatureDao featureDao = mGeoPackage.getFeatureDao(featureTable);
+        FeatureRow newRow = featureDao.newRow();
+        featureDao.create(featureRowFromFeature(feature, newRow));
+        feature.Id = newRow.getId();
+        return feature;
+    }
+
+    public void removeFeature(String featureTable, long featureId){
+        FeatureDao featureDao = mGeoPackage.getFeatureDao(featureTable);
+        featureDao.deleteById(featureId);
+    }
+
+    public List<MapFeature> getFeatures(String featureTable){
+        List<MapFeature>  features = new ArrayList<>();
+
+        FeatureDao featureDao = mGeoPackage.getFeatureDao(featureTable);
+        FeatureCursor featureCursor = featureDao.queryForAll();
+        while(featureCursor.moveToNext()){
+            features.add(featureFromFeatureRow(featureCursor.getRow()));
+        }
+
+        return features;
+    }
+
+    public MapFeature getMapFeature(String featureTable, long featureId){
+        FeatureDao featureDao = mGeoPackage.getFeatureDao(featureTable);
+        FeatureCursor featureCursor = featureDao.queryForId(featureId);
+        if(featureCursor.moveToNext()){
+            return featureFromFeatureRow(featureCursor.getRow());
+        }
+
+        return null;
+    }
+
+
     public void removeHub(OpenSensorHub hub) {
         FeatureDao hubDao = mGeoPackage.getFeatureDao(HUB_TABLE_NAME);
         hubDao.deleteById(hub.Id);
@@ -519,7 +637,7 @@ public class OSHDataContext {
             FeatureDao dao = mGeoPackage.getFeatureDao(SNSR_TABLE_NAME);
             FeatureRow newRow = dao.newRow();
 
-            Point pt = new Point(hub.Location.Longitude, hub.Location.Longitude);
+            Point pt = new Point(hub.Location.longitude, hub.Location.latitude);
             GeoPackageGeometryData geometryData = new GeoPackageGeometryData(getSrs().getSrsId());
             geometryData.setGeometry(pt);
             newRow.setGeometry(geometryData);
@@ -667,5 +785,56 @@ public class OSHDataContext {
         }
 
         return currentValues;
+    }
+
+    /*
+      https://github.com/ngageoint/geopackage-android/blob/rte/geopackage-sdk/src/androidTest/java/mil/nga/geopackage/test/extension/related/RelatedTablesUtils.java
+     */
+    private void createSensorsRelatedTables(String featureTableName) {
+        RelatedTablesExtension relatedTables = new RelatedTablesExtension(mGeoPackage);
+
+        List<UserCustomColumn> additionalMappingColumns = new ArrayList<>();
+
+        UserMappingTable userMappingTable = UserMappingTable.create(getRelatedSensorTableName(featureTableName), additionalMappingColumns);
+        relatedTables.addFeaturesRelationship(featureTableName, "sensors", userMappingTable);
+    }
+
+    private String getRelatedHubTableName(String featureTableName){
+        return String.format("%s_hubs", featureTableName);
+    }
+
+    private String getRelatedSensorTableName(String featureTableName){
+        return String.format("%s_sensors", featureTableName);
+    }
+
+    private void createHubsRelatedTables(String featureTableName) {
+        RelatedTablesExtension relatedTables = new RelatedTablesExtension(mGeoPackage);
+
+        int columnIndex = 0;
+        List<UserCustomColumn> additionalMappingColumns = new ArrayList<>();
+        additionalMappingColumns.add(UserCustomColumn.createColumn(columnIndex++, DublinCoreType.DATE.getName(), GeoPackageDataType.DATETIME, true, null));
+
+        UserMappingTable userMappingTable = UserMappingTable.create(getRelatedHubTableName(featureTableName), additionalMappingColumns);
+        relatedTables.addFeaturesRelationship(featureTableName, "hubs", userMappingTable);
+    }
+
+    public void relateFeatureToHub(String featureTableName, long featureId, long hubId){
+        RelatedTablesExtension relatedTables = new RelatedTablesExtension(mGeoPackage);
+        UserMappingDao mappingDao = relatedTables.getMappingDao(getRelatedHubTableName(featureTableName));
+
+        UserMappingRow row = mappingDao.newRow();
+        row.setBaseId(featureId);
+        row.setRelatedId(hubId);
+        mappingDao.insert(row);
+    }
+
+    public void relateFeatureToSensor(String featureTableName, long featureId, long sensorId){
+        RelatedTablesExtension relatedTables = new RelatedTablesExtension(mGeoPackage);
+        UserMappingDao mappingDao = relatedTables.getMappingDao(getRelatedSensorTableName(featureTableName));
+
+        UserMappingRow row = mappingDao.newRow();
+        row.setBaseId(featureId);
+        row.setRelatedId(sensorId);
+        mappingDao.insert(row);
     }
 }

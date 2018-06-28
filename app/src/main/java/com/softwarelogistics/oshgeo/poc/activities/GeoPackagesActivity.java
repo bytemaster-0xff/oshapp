@@ -58,7 +58,6 @@ public class GeoPackagesActivity extends AppCompatActivityBase implements Remove
         populateDatabases();
     }
 
-
     private void populateDatabases() {
         GeoDataContext ctx = new GeoDataContext(this);
         mPackages = ctx.getPackages();

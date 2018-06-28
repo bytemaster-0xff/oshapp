@@ -5,6 +5,9 @@
     <string name="title_activity_osh_hubs">Open Sensor Hubs</string>
     <string name="title_activity_osh_hub">Open Sensor Hub</string>
     <string name="title_activity_osh_sensors">Sensors</string>
+    <string name="title_activity_feature_tables">Feature Tables</string>
+    <string name="title_activity_features">Features</string>
+    <string name="title_activity_feature_detail">Feature Detail</string>
 
     <string name="title_activity_main">SOFWERX - OpenSensorHub/Geo POC</string>
     <!-- Icon to Unicode mapping https://fontawesome.com/icons?d=gallery -->

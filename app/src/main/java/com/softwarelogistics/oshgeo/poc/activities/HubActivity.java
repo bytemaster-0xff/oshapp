@@ -120,9 +120,7 @@ public class HubActivity extends AppCompatActivity {
         OpenSensorHub hub = new OpenSensorHub();
 
         if(mSensorLocation != null) {
-            hub.Location = new GeoLocation();
-            hub.Location.Latitude = mSensorLocation.latitude;
-            hub.Location.Longitude = mSensorLocation.longitude;
+            hub.Location =new LatLng(mSensorLocation.latitude, mSensorLocation.longitude);
         }
         else {
             mSetLocation.setError("Please select location of hub");

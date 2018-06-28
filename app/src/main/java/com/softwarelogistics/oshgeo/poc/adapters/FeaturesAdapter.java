@@ -13,16 +13,17 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import com.softwarelogistics.oshgeo.poc.R;
+import com.softwarelogistics.oshgeo.poc.models.MapFeature;
 
 import java.util.List;
 
-public class FeaturesAdapter extends ArrayAdapter<String> {
+public class FeaturesAdapter extends ArrayAdapter<MapFeature> {
     private int mRowResourceId;
     private Typeface mFontAwesome;
-    private List<String> mFeatures;
+    private List<MapFeature> mFeatures;
     private RemoveFeatureHandler mRemoveFeatureHandler;
 
-    public FeaturesAdapter(@NonNull Context context, int resource, List<String> features,
+    public FeaturesAdapter(@NonNull Context context, int resource, List<MapFeature> features,
                            RemoveFeatureHandler  removeFeatureHandler) {
         super(context, resource, features);
         mRowResourceId = resource;
@@ -36,8 +37,8 @@ public class FeaturesAdapter extends ArrayAdapter<String> {
     TextView.OnClickListener remoteFeatureTable = new TextView.OnClickListener() {
         @Override
         public void onClick(View view) {
-            String hub = mFeatures.get((Integer) view.getTag());
-            mRemoveFeatureHandler.onRemoveFeature(5);
+            MapFeature mapFeature = mFeatures.get((Integer) view.getTag());
+            mRemoveFeatureHandler.onRemoveFeature(mapFeature.Id);
         }
     };
 
@@ -48,8 +49,8 @@ public class FeaturesAdapter extends ArrayAdapter<String> {
         View row = inflater.inflate(mRowResourceId, parent, false);
 
         TextView hubName= row.findViewById(R.id.row_feature_name);
-        String hub = mFeatures.get(position);
-        hubName.setText(hub);
+        MapFeature feature = mFeatures.get(position);
+        hubName.setText(feature.Name);
 
         TextView removeDb = row.findViewById(R.id.row_feature_remove);
         removeDb.setTag(position);

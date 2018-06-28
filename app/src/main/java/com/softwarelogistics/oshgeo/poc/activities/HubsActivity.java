@@ -79,7 +79,6 @@ public class HubsActivity extends AppCompatActivityBase implements RemoveHubHand
     @Override
     protected void onResume() {
         super.onResume();
-
         populateHubs();
     }
 
@@ -99,8 +98,8 @@ public class HubsActivity extends AppCompatActivityBase implements RemoveHubHand
     @Override
     public void onRemoveHub(final OpenSensorHub hub) {
         new AlertDialog.Builder(this)
-                .setTitle("Remove Database?")
-                .setMessage("Are you really sure you want to remove the database?  This can not be un-done.")
+                .setTitle("Remove Hub?")
+                .setMessage("Are you really sure you want to remove the hub?  This can not be un-done.")
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {

@@ -2,11 +2,13 @@ package com.softwarelogistics.oshgeo.poc.models;
 
 import android.net.wifi.WifiConfiguration;
 
+import com.google.android.gms.maps.model.LatLng;
+
 public class OpenSensorHub {
     public long Id;
     public String Name;
 
-    public GeoLocation Location;
+    public LatLng Location;
     public boolean SecureConnection;
     public String URI;
     public long Port;

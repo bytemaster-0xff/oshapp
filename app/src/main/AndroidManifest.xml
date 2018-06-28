@@ -68,9 +68,9 @@
         <activity android:name=".activities.SensorsActivity" />
         <activity android:name=".activities.SensorActivity" />
         <activity android:name=".activities.SensorObservation" />
-        <activity android:name=".activities.FeaturesActivity" />
-        <activity android:name=".activities.FeatureTablesActivity" />
-        <activity android:name=".activities.FeatureActivity" />
+        <activity android:name=".activities.FeaturesActivity" android:label="@string/title_activity_features" />
+        <activity android:name=".activities.FeatureTablesActivity" android:label="@string/title_activity_feature_tables" />
+        <activity android:name=".activities.FeatureActivity"  android:label="@string/title_activity_feature_detail" />
         <activity android:name=".activities.AcquireActivity"></activity>
     </application>
 

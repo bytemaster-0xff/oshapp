@@ -1,12 +1,14 @@
 package com.softwarelogistics.oshgeo.poc.activities;
 
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.AlertDialog;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -15,20 +17,13 @@ import android.widget.Toast;
 
 import com.softwarelogistics.oshgeo.poc.R;
 import com.softwarelogistics.oshgeo.poc.adapters.FeatureTablesAdapter;
-import com.softwarelogistics.oshgeo.poc.adapters.HubsAdapter;
 import com.softwarelogistics.oshgeo.poc.adapters.RemoveFeatureTableHandler;
 import com.softwarelogistics.oshgeo.poc.repos.GeoDataContext;
 import com.softwarelogistics.oshgeo.poc.repos.GeoPackageDataContext;
 import com.softwarelogistics.oshgeo.poc.repos.OSHDataContext;
 import com.softwarelogistics.oshgeo.poc.utils.ValidationUtils;
 
-import java.sql.SQLException;
-import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
-
-import mil.nga.geopackage.core.contents.Contents;
-import mil.nga.geopackage.core.contents.ContentsDataType;
 
 public class FeatureTablesActivity extends AppCompatActivityBase implements RemoveFeatureTableHandler {
 
@@ -54,6 +49,13 @@ public class FeatureTablesActivity extends AppCompatActivityBase implements Remo
         final GeoPackageDataContext pgk = ctx.getPackage(mGeoPackageName);
 
         mFeaturesListView = findViewById(R.id.features_tables_list);
+        mFeaturesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                String tableName = mFeatureTableNames.get(i);
+                openFeatureTable(tableName);
+            }
+        });
 
         mFeatureName = findViewById(R.id.feature_table_name);
         mFeatureDescription = findViewById(R.id.feature_table_description);
@@ -62,10 +64,16 @@ public class FeatureTablesActivity extends AppCompatActivityBase implements Remo
         mSaveNewFeatureTable.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mNewFeature.setVisibility(View.GONE);
                 OSHDataContext oshCtx = pgk.getOSHDataContext();
+
                 if(ValidationUtils.isValidDBName(mFeatureName.getText().toString())) {
+                    if(oshCtx.featureTableNameInUse(mFeatureName.getText().toString())){
+                        Toast.makeText(FeatureTablesActivity.this, "Feature table name already in use.", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+
                     oshCtx.createFeatureTable(mFeatureName.getText().toString(), mFeatureDescription.getText().toString());
+                    mNewFeature.setVisibility(View.GONE);
                     populateFeatureTables();
                 }
                 else{
@@ -85,30 +93,20 @@ public class FeatureTablesActivity extends AppCompatActivityBase implements Remo
         populateFeatureTables();
     }
 
-    private void populateFeatureTables()
-    {
+    private void populateFeatureTables() {
         GeoDataContext ctx = new GeoDataContext(this);
-        final GeoPackageDataContext pgk = ctx.getPackage(mGeoPackageName);
-
-        try {
-            mFeatureTableNames = new ArrayList<>();
-            List<Contents> contents = pgk.getContents();
-            for(Contents content : contents){
-                if(content.getDataType() == ContentsDataType.FEATURES &&
-                        content.getTableName() != OSHDataContext.HUB_TABLE_NAME &&
-                        content.getTableName() != OSHDataContext.SNSR_TABLE_NAME){
-                    mFeatureTableNames.add(content.getTableName());
-                }
-            }
-        }
-        catch (SQLException ex){
-
-        }
-
+        OSHDataContext oshCtx= ctx.getOSHDataContext(mGeoPackageName);
+        mFeatureTableNames = oshCtx.getFeatureTables();
         mFeatureTableAdapter = new FeatureTablesAdapter(this, R.layout.list_row_feature_table, mFeatureTableNames, this);
-
         mFeaturesListView.setAdapter(mFeatureTableAdapter);
         mFeaturesListView.invalidate();
+    }
+
+    private void openFeatureTable(String tableName){
+        Intent intent = new Intent(this, FeaturesActivity.class);
+        intent.putExtra(MainActivity.EXTRA_DB_NAME, mGeoPackageName);
+        intent.putExtra(FeaturesActivity.FEATURE_TABLE_NAME, tableName);
+        startActivity(intent);
     }
 
     @Override
@@ -135,7 +133,21 @@ public class FeatureTablesActivity extends AppCompatActivityBase implements Remo
     }
 
     @Override
-    public void onRemoveFeatureTable(String dbName) {
+    public void onRemoveFeatureTable(final String tableName) {
+        new AlertDialog.Builder(this)
+                .setTitle("Remove Features Table?")
+                .setMessage("Are you really sure you want to remove the features table?  This can not be un-done.")
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+
+                    GeoDataContext ctx = new GeoDataContext(FeatureTablesActivity.this);
+                    final GeoPackageDataContext pgk = ctx.getPackage(mGeoPackageName);
+                    OSHDataContext oshCtx = pgk.getOSHDataContext();
+                    oshCtx.removeFeatureTable(tableName);
+                    populateFeatureTables();
+                }})
+            .setNegativeButton(android.R.string.no, null).show();
 
     }
 }
