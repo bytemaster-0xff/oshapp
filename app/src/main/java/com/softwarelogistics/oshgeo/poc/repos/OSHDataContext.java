@@ -81,9 +81,9 @@ public class OSHDataContext {
     static final String HUB_COL_PORT = "port";
 
     public static final String SNSR_TABLE_NAME = "sensors";
-    static final String SNSR_COL_SNSR_ID = "sensor_id";
-    static final String SNSR_HUB_ID = "sensor_id";
+    static final String SNSR_HUB_ID = "hub_id";
     static final String SNSR_COL_SNSR_TYPE = "sensor_type";
+    static final String SNSR_COL_SNSR_UNIQUE_ID = "sensor_unique_id";
     static final String SNSR_COL_LAST_CONTACT = "last_contact";
 
     static final String READING_TABLE_NAME = "sensor_readings";
@@ -246,6 +246,8 @@ public class OSHDataContext {
         columns.add(FeatureColumn.createColumn(idx++, SNSR_HUB_ID, GeoPackageDataType.INT, true, 0));
         columns.add(FeatureColumn.createGeometryColumn(idx++, COL_GEOMETRY, GeometryType.POINT, true, null));
         columns.add(FeatureColumn.createColumn(idx++, COL_NAME, GeoPackageDataType.TEXT,true, ""));
+        columns.add(FeatureColumn.createColumn(idx++, COL_DESCRIPTION, GeoPackageDataType.TEXT,false, ""));
+        columns.add(FeatureColumn.createColumn(idx++, SNSR_COL_SNSR_UNIQUE_ID, GeoPackageDataType.TEXT,true, ""));
         columns.add(FeatureColumn.createColumn(idx++, SNSR_COL_SNSR_TYPE, GeoPackageDataType.TEXT, true, null));
         columns.add(FeatureColumn.createColumn(idx++, SNSR_COL_LAST_CONTACT, GeoPackageDataType.TEXT, false, null));
         FeatureTable tbl = new FeatureTable(SNSR_TABLE_NAME, columns);
@@ -476,8 +478,17 @@ public class OSHDataContext {
         Sensor sensor = new Sensor();
         sensor.HubId = (long)row.getValue(SNSR_HUB_ID);
         sensor.Name = row.getValue(COL_NAME).toString();
+        Object desc = row.getValue(COL_DESCRIPTION);
+
+        if(desc != null) {
+            sensor.Description = desc.toString();
+        }
+
+        GeoPackageGeometryData geometryData = row.getGeometry();
+        Point pt = (Point)geometryData.getGeometry();
+
+        sensor.Location = new LatLng(pt.getY(), pt.getX());
         sensor.SensorType = row.getValue(SNSR_COL_SNSR_TYPE).toString();
-        sensor.SensorId = row.getValue(SNSR_COL_SNSR_TYPE).toString();
         Object lastContact = row.getValue(SNSR_COL_LAST_CONTACT);
         if(lastContact != null) {
             sensor.LastContact = (java.sql.Date)lastContact;
@@ -488,8 +499,9 @@ public class OSHDataContext {
 
     private FeatureRow sensorToFeatureRow(Sensor sensor, FeatureRow row){
         row.setValue(COL_NAME, sensor.Name);
+        row.setValue(COL_DESCRIPTION, sensor.Description);
         row.setValue(SNSR_HUB_ID, sensor.HubId);
-        row.setValue(SNSR_COL_SNSR_ID, sensor.SensorId);
+        row.setValue(SNSR_COL_SNSR_UNIQUE_ID, sensor.SensorUniqueId);
         row.setValue(SNSR_COL_SNSR_TYPE, sensor.SensorType);
         if (sensor.LastContact != null) {
             row.setValue(SNSR_COL_LAST_CONTACT, sensor.LastContact);
@@ -671,7 +683,10 @@ public class OSHDataContext {
             FeatureDao dao = mGeoPackage.getFeatureDao(SNSR_TABLE_NAME);
             FeatureRow newRow = dao.newRow();
 
-            Point pt = new Point(hub.Location.longitude, hub.Location.latitude);
+            Point pt = (sensor.Location == null) ?
+                new Point(hub.Location.longitude, hub.Location.latitude) :
+                new Point(sensor.Location.longitude, sensor.Location.latitude);
+
             GeoPackageGeometryData geometryData = new GeoPackageGeometryData(getSrs().getSrsId());
             geometryData.setGeometry(pt);
             newRow.setGeometry(geometryData);
@@ -700,9 +715,9 @@ public class OSHDataContext {
         return sensors;
     }
 
-    public Sensor findSensor(String sensorId) {
+    public Sensor findSensor(String uniqueSensorId) {
         FeatureDao sensorsDao = mGeoPackage.getFeatureDao(SNSR_TABLE_NAME);
-        FeatureCursor cursor = sensorsDao.queryForEq(SNSR_COL_SNSR_ID, sensorId);
+        FeatureCursor cursor = sensorsDao.queryForEq(SNSR_COL_SNSR_UNIQUE_ID, uniqueSensorId);
         try {
             if (cursor.moveToNext()) {
                 return sensorFromFeatureRow(cursor.getRow());

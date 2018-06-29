@@ -41,9 +41,9 @@ public class SensorsActivity extends AppCompatActivity {
         long hubId = getIntent().getLongExtra(SensorsActivity.EXTRA_HUB_ID, 0);
 
         GeoDataContext ctx = new GeoDataContext(this);
-        OSHDataContext geoCtx = ctx.getOSHDataContext(mDatabaseName);
+        final OSHDataContext oshHubCtx = ctx.getOSHDataContext(mDatabaseName);
 
-        mHub = geoCtx.getHub(hubId);
+        mHub = oshHubCtx .getHub(hubId);
 
         GetSOSCapabilitiesTask task = new GetSOSCapabilitiesTask();
         task.responseHandler = new GetSOSCapabilitiesResponseHandler() {
@@ -63,6 +63,15 @@ public class SensorsActivity extends AppCompatActivity {
                 }
 
                 for(ObservationDescriptor descriptor : capabilities.Descriptors){
+                    Sensor sensor = new Sensor();
+                    sensor.HubId = mHub.Id;
+                    sensor.Name = descriptor.Name;
+                    sensor.SensorType = "unknown";
+                    sensor.Description = descriptor.Description;
+                    sensor.SensorUniqueId = descriptor.Id;
+                    oshHubCtx.addSensor(mHub, sensor);
+
+                    Log.d("log.osh", descriptor.Id);
                     Log.d("log.osh", descriptor.Name);
                     Log.d("log.osh", descriptor.Description);
                 }

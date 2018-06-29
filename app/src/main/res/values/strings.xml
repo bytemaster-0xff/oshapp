@@ -4,6 +4,10 @@
     <string name="title_activity_geo_package">Create/Edit Geo Package</string>
     <string name="title_activity_osh_hubs">Open Sensor Hubs</string>
     <string name="title_activity_osh_hub">Open Sensor Hub</string>
+    <string name="title_activity_sensors">Sensors</string>
+    <string name="title_activity_sensor">Sensor Detail</string>
+    <string name="title_activity_observations">Sensor Observations</string>
+    <string name="title_activity_location_picker">Location Picker</string>
     <string name="title_activity_osh_sensors">Sensors</string>
     <string name="title_activity_feature_tables">Feature Tables</string>
     <string name="title_activity_features">Features</string>
