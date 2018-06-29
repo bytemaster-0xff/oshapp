@@ -1,11 +1,15 @@
 package com.softwarelogistics.oshgeo.poc.services;
 
 
+import android.icu.util.Output;
 import android.util.Log;
 
 import com.softwarelogistics.oshgeo.poc.models.Capabilities;
 import com.softwarelogistics.oshgeo.poc.models.ObservationDescriptor;
+import com.softwarelogistics.oshgeo.poc.models.ObservationDescriptorDataField;
+import com.softwarelogistics.oshgeo.poc.models.Offering;
 import com.softwarelogistics.oshgeo.poc.models.SensorValue;
+import com.softwarelogistics.oshgeo.poc.utils.DateParser;
 
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -125,24 +129,42 @@ public class SosClient  {
         return null;
     }
 
-    public List<SensorValue> getSensorValue(ObservationDescriptor descriptors, String offeringId, String property){
+    public SensorValue getSensorValue(ObservationDescriptor descriptors, Offering offering, ObservationDescriptorDataField field){
 
         //String offeringId = "urn:osh:esp8266:dht:attic-sos";
         //String property = "http://sensorml.com/ont/swe/property/AirTemperature";
 
-        String valueUri = String.format("%s://%s:%d/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=%s&observedProperty=%s&temporalFilter=phenomenonTime,now", mHttps ? "https" : "http", mUri, mPort, offeringId,property);
+        String formatString = "%s://%s:%d/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=%s&observedProperty=%s&temporalFilter=phenomenonTime,now";
 
-        Log.d("log.osh","Asking for value");
-        Log.d("log.osh",valueUri);
+        String valueUri = String.format(formatString, mHttps ? "https" : "http", mUri, mPort, offering.Identifier, field.Definition);
+
+        Log.d("log.osh","");
         Log.d("log.osh","-------------------------------------------");
-        HttpURLConnection urlConnection = null;
-        InputStream rawValueStream = null;
+        Log.d("log.osh",offering.Name);
+        Log.d("log.osh",valueUri);
+
         try {
-            String valueInput = readStringFromURL(valueUri);
-            Log.d("log.osh", valueInput);
+            String rawValue = readStringFromURL(valueUri);
+            Log.d("log.osh",  rawValue);
+
+            SensorValue value = new SensorValue();
+            value.Name = field.Label;
+            value.StrValue = rawValue;
+            String[] parts = rawValue.split(",");
+            if(parts.length == 2){
+
+                value.StrValue = parts[1];
+                value.Timestamp = DateParser.parse(parts[0]);
+            }
+
+            Log.d("log.osh","-------------------------------------------");
+
+            return value;
+
         }
         catch(Exception e) {
-
+            Log.d("log.osh",e.getLocalizedMessage());
+            Log.d("log.osh","!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         }
 
         return null;

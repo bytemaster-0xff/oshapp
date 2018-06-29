@@ -2,6 +2,8 @@ package com.softwarelogistics.oshgeo.poc.models;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.util.Date;
+
 public class Sensor {
     public long Id;
     public long HubId;
@@ -10,5 +12,5 @@ public class Sensor {
     public String SensorUniqueId;
     public String SensorType;
     public String Name;
-    public java.sql.Date LastContact;
+    public Date LastContact;
 }

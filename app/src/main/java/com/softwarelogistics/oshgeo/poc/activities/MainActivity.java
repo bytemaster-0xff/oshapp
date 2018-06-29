@@ -94,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
         //  mContentsListView = findViewById(R.id.main_list_contents);
 
         mCurrentDBName = findViewById(R.id.textview_current_dbname);
-        mCurrentDBName.setText("Please Open or Create a Database");
+        mCurrentDBName.setText("-none-");
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
             ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -159,6 +159,25 @@ public class MainActivity extends AppCompatActivity {
     private void showDatabases(){
         Intent myIntent = new Intent(this, GeoPackagesActivity.class);
         this.startActivityForResult(myIntent, 100);
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(mCurrentPackageName != null) {
+            GeoDataContext ctx = new GeoDataContext(this);
+
+            if(!ctx.doesPackageExists(mCurrentPackageName)){
+                mShowSensorHubs.setVisibility(View.GONE);
+                mShowMap.setVisibility(View.GONE);
+                mShowFeatures.setVisibility(View.GONE);
+                mShowAquire.setVisibility(View.GONE);
+                mExport.setVisibility(View.GONE);
+                mCurrentPackageName = null;
+                mCurrentDBName.setText("-none-");
+            }
+        }
     }
 
     @Override

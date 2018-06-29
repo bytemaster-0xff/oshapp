@@ -29,6 +29,10 @@ public class GeoDataContext {
         return new GeoPackageDataContext(pkg, packageName);
     }
 
+    public boolean doesPackageExists(String packageName){
+        return mGeoPackageManager.exists(packageName);
+    }
+
     public GeoPackageDataContext createPackage(String packageName, LatLng northWest, LatLng southEast) {
         mGeoPackageManager.create(packageName);
         GeoPackageDataContext ctx = getPackage(packageName);

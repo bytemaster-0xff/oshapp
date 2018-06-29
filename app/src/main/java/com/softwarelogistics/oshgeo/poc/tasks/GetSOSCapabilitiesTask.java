@@ -12,39 +12,33 @@ import com.softwarelogistics.oshgeo.poc.models.Offering;
 import com.softwarelogistics.oshgeo.poc.models.OpenSensorHub;
 import com.softwarelogistics.oshgeo.poc.services.SosClient;
 
-public class GetSOSCapabilitiesTask extends AsyncTask<OpenSensorHub, Void, Capabilities> {
+public class GetSOSCapabilitiesTask extends AsyncTask<OpenSensorHub, String, Capabilities> {
     public GetSOSCapabilitiesResponseHandler responseHandler = null;
+
+    public ProgressHandler progressHandler = null;
 
     @Override
     protected Capabilities doInBackground(OpenSensorHub... hub) {
         SosClient client = new SosClient(hub[0].SecureConnection,hub[0].URI,hub[0].Port);
+        publishProgress("Downloading Capabilities");
         Capabilities capabilities = client.loadOSHData();
         if(capabilities != null) {
             for(Offering offering : capabilities.Offerings){
-                Log.d("log.osh", String.format("%s - %s", offering.Name, offering.Procedure));
+                publishProgress(String.format("Downloading %s", offering.Name));
                 ObservationDescriptor descriptor = client.loadObservationDescriptor(offering.Procedure);
                 capabilities.Descriptors.add(descriptor);
-
-                for(ObservationDescriptorOutput output : descriptor.Outputs) {
-                    for(ObservationDescriptorDataField field : output.Fields) {
-                        if(field.FieldType != ObservationDescriptorDataField.FieldTypes.Time) {
-                            client.getSensorValue(descriptor, offering.Identifier, field.Definition);
-                        }
-                    }
-                }
-
-                for(ObservationDescriptorOutput output : descriptor.DataStreams) {
-                    for(ObservationDescriptorDataField field : output.Fields) {
-                        if(field.FieldType != ObservationDescriptorDataField.FieldTypes.Time) {
-                            client.getSensorValue(descriptor, offering.Identifier, field.Definition);
-                        }
-                    }
-                }
             }
         }
 
         return capabilities;
     }
+
+    @Override
+    protected void onProgressUpdate(String... values) {
+        super.onProgressUpdate(values);
+        progressHandler.progressUpdated(String.format(values[0]));
+    }
+
 
     @Override
     protected void onPostExecute(Capabilities capabilities) {

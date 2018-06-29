@@ -18,6 +18,7 @@ import com.softwarelogistics.oshgeo.poc.models.SensorValue;
 import java.io.File;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import mil.nga.geopackage.GeoPackage;
@@ -39,6 +40,7 @@ import mil.nga.geopackage.features.columns.GeometryColumns;
 import mil.nga.geopackage.features.columns.GeometryColumnsDao;
 import mil.nga.geopackage.features.user.FeatureColumn;
 import mil.nga.geopackage.extension.related.ExtendedRelation;
+import mil.nga.geopackage.user.UserQuery;
 import mil.nga.geopackage.user.custom.UserCustomColumn;
 import mil.nga.geopackage.extension.related.UserMappingDao;
 import mil.nga.geopackage.extension.related.UserMappingRow;
@@ -249,7 +251,7 @@ public class OSHDataContext {
         columns.add(FeatureColumn.createColumn(idx++, COL_DESCRIPTION, GeoPackageDataType.TEXT,false, ""));
         columns.add(FeatureColumn.createColumn(idx++, SNSR_COL_SNSR_UNIQUE_ID, GeoPackageDataType.TEXT,true, ""));
         columns.add(FeatureColumn.createColumn(idx++, SNSR_COL_SNSR_TYPE, GeoPackageDataType.TEXT, true, null));
-        columns.add(FeatureColumn.createColumn(idx++, SNSR_COL_LAST_CONTACT, GeoPackageDataType.TEXT, false, null));
+        columns.add(FeatureColumn.createColumn(idx++, SNSR_COL_LAST_CONTACT, GeoPackageDataType.DATETIME, false, null));
         FeatureTable tbl = new FeatureTable(SNSR_TABLE_NAME, columns);
         mGeoPackage.createFeatureTable(tbl);
 
@@ -478,6 +480,7 @@ public class OSHDataContext {
         Sensor sensor = new Sensor();
         sensor.HubId = (long)row.getValue(SNSR_HUB_ID);
         sensor.Name = row.getValue(COL_NAME).toString();
+        sensor.SensorUniqueId = row.getValue(SNSR_COL_SNSR_UNIQUE_ID).toString();
         Object desc = row.getValue(COL_DESCRIPTION);
 
         if(desc != null) {
@@ -491,7 +494,7 @@ public class OSHDataContext {
         sensor.SensorType = row.getValue(SNSR_COL_SNSR_TYPE).toString();
         Object lastContact = row.getValue(SNSR_COL_LAST_CONTACT);
         if(lastContact != null) {
-            sensor.LastContact = (java.sql.Date)lastContact;
+            sensor.LastContact = (java.util.Date)lastContact;
         }
         sensor.Id = row.getId();
         return sensor;
@@ -677,15 +680,35 @@ public class OSHDataContext {
         hubDao.deleteById(hub.Id);
     }
 
-    public boolean addSensor(OpenSensorHub hub, Sensor sensor) {
+    /**
+     * The sensor hub will always get a list of the current sensors, this method will
+     * reconcile any changes with database as well as update the last contact field.
+     * @param hub - hub that the sensor belongs to
+     * @param sensor - sensor to be added/updated
+     * @return True if Saved, False if not.
+     */
+    public boolean refreshSensor(OpenSensorHub hub, Sensor sensor) {
+        Sensor existingSensor = findSensor(hub.Id, sensor.SensorUniqueId);
+        if(existingSensor != null){
+            return updateSensor(hub, sensor);
+
+        }
+        else {
+            return addSensor(hub, sensor);
+        }
+    }
+
+    public boolean addSensor(OpenSensorHub hub, Sensor sensor){
         try
         {
+            sensor.LastContact = new Date();
+
             FeatureDao dao = mGeoPackage.getFeatureDao(SNSR_TABLE_NAME);
             FeatureRow newRow = dao.newRow();
 
             Point pt = (sensor.Location == null) ?
-                new Point(hub.Location.longitude, hub.Location.latitude) :
-                new Point(sensor.Location.longitude, sensor.Location.latitude);
+                    new Point(hub.Location.longitude, hub.Location.latitude) :
+                    new Point(sensor.Location.longitude, sensor.Location.latitude);
 
             GeoPackageGeometryData geometryData = new GeoPackageGeometryData(getSrs().getSrsId());
             geometryData.setGeometry(pt);
@@ -699,7 +722,32 @@ public class OSHDataContext {
         }
     }
 
-    public List<Sensor> getSensors(int hubId) {
+    public boolean updateSensor(OpenSensorHub hub, Sensor sensor){
+        FeatureDao dao = mGeoPackage.getFeatureDao(SNSR_TABLE_NAME);
+
+        sensor.LastContact = new Date();
+
+        FeatureCursor cursor = dao.queryForEq(SNSR_COL_SNSR_UNIQUE_ID, sensor.SensorUniqueId);
+        FeatureRow sensorRow = null;
+        while(cursor.moveToNext()) {
+            FeatureRow row = cursor.getRow();
+            //TODO: HACK - Need to identify how to do multi argument parameterized queries.  This should be plenty fast though.
+            if((long)row.getValue(SNSR_HUB_ID) == hub.Id){
+                sensorRow = row;
+            }
+        }
+
+        if(sensorRow == null){
+            return false;
+        }
+
+        sensorRow = sensorToFeatureRow(sensor, sensorRow);
+        dao.update(sensorRow);
+
+        return true;
+    }
+
+    public List<Sensor> getSensors(long hubId) {
         List<Sensor> sensors = new ArrayList<>();
         FeatureDao sensorsDao = mGeoPackage.getFeatureDao(SNSR_TABLE_NAME);
         FeatureCursor sensorsCursor = sensorsDao.queryForEq(SNSR_HUB_ID, hubId);
@@ -715,12 +763,16 @@ public class OSHDataContext {
         return sensors;
     }
 
-    public Sensor findSensor(String uniqueSensorId) {
+    public Sensor findSensor(long hubId, String uniqueSensorId) {
         FeatureDao sensorsDao = mGeoPackage.getFeatureDao(SNSR_TABLE_NAME);
         FeatureCursor cursor = sensorsDao.queryForEq(SNSR_COL_SNSR_UNIQUE_ID, uniqueSensorId);
         try {
-            if (cursor.moveToNext()) {
-                return sensorFromFeatureRow(cursor.getRow());
+            while(cursor.moveToNext()) {
+                Sensor sensor = sensorFromFeatureRow(cursor.getRow());
+                //TODO: HACK - Need to identify how to do multi argument parameterized queries.  This should be plenty fast though.
+                if(sensor.HubId == hubId){
+                    return sensor;
+                }
             }
         }
         finally {
@@ -730,7 +782,7 @@ public class OSHDataContext {
         return null;
     }
 
-    public Sensor findSensor(int sensorId) {
+    public Sensor findSensor(long sensorId) {
         FeatureDao sensorsDao = mGeoPackage.getFeatureDao(SNSR_TABLE_NAME);
         FeatureCursor cursor = sensorsDao.queryForId(sensorId);
         if(cursor.moveToNext()) {
@@ -745,7 +797,7 @@ public class OSHDataContext {
             return true;
         }
 
-        java.sql.Date timestamp = values.get(0).Timestamp;
+        java.util.Date timestamp = values.get(0).Timestamp;
 
         FeatureDao sensorDao = mGeoPackage.getFeatureDao(SNSR_TABLE_NAME);
         FeatureCursor sensorCursor = sensorDao.queryForId(sensor.Id);

@@ -16,13 +16,13 @@ import com.softwarelogistics.oshgeo.poc.models.Sensor;
 
 import java.util.List;
 
-public class SensorsAdapter extends ArrayAdapter<OpenSensorHub> {
+public class SensorsAdapter extends ArrayAdapter<Sensor> {
     private int mRowResourceId;
 
     private List<Sensor> mSensors;
 
     public SensorsAdapter(@NonNull Context context, List<Sensor> sensors, int resource) {
-        super(context, resource);
+        super(context, resource, sensors);
         mRowResourceId = resource;
         mSensors = sensors;
     }
@@ -36,6 +36,12 @@ public class SensorsAdapter extends ArrayAdapter<OpenSensorHub> {
         TextView sensorView = row.findViewById(R.id.row_sensor_name);
         Sensor sensor = mSensors.get(position);
         sensorView.setText(sensor.Name);
+
+        TextView descriptionView = row.findViewById(R.id.row_sensor_description);
+        descriptionView.setText(sensor.Description);
+
+        TextView lastUpdateView = row.findViewById(R.id.row_sensor_last_update);
+        lastUpdateView.setText(sensor.LastContact.toString());
 
         return row;
     }

@@ -1,6 +1,6 @@
 package com.softwarelogistics.oshgeo.poc.models;
 
-import java.sql.Date;
+import java.util.Date;
 
 public class SensorValue {
     public long Id;
