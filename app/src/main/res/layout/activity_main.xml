@@ -136,7 +136,31 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
         </LinearLayout>
-
+        <LinearLayout
+            android:layout_width="100dp"
+            android:layout_margin="10dp"
+            android:layout_height="100dp"
+            android:layout_row="1"
+            android:layout_column="2"
+            android:fontFamily="casual"
+            android:gravity="center"
+            android:id="@+id/main_export_menu"
+            android:orientation="vertical"
+            android:background="@drawable/custom_border">
+            <TextView
+                android:fontFamily="@font/fa_solid_900"
+                android:textSize="48dp"
+                android:textColor="@color/colorAccent"
+                android:textAlignment="center"
+                android:text="@string/icon_export"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:text="Export"
+                android:textSize="16dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
     </GridLayout>
 
 

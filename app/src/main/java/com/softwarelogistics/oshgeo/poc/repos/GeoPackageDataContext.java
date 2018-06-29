@@ -22,6 +22,8 @@ public class GeoPackageDataContext {
     private GeoPackage mGeoPackage;
     private String mPackageName;
 
+    public static final String GEO_PACKAGE_EXTENSION = "gpkg";
+
     public GeoPackageDataContext(GeoPackage geoPackage, String packageName){
         mGeoPackage = geoPackage;
         mPackageName = packageName;
@@ -42,10 +44,8 @@ public class GeoPackageDataContext {
     }
 
 
-    public void exportGeoPackage(Context context) {
+    public File exportGeoPackage(Context context) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-            String packageName = "d";
-
             GeoPackageManager manager = GeoPackageFactory.getManager(context);
 
             File exportDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
@@ -54,13 +54,22 @@ public class GeoPackageDataContext {
                 exportDirectory.mkdir();
             }
 
-            File exportedFile = new File(exportDirectory, packageName + ".gpkg");
+            File existingFile = new File(exportDirectory, String.format("%ws.%s", mPackageName, GEO_PACKAGE_EXTENSION));
 
-            if (exportedFile.exists()) {
-                exportedFile.delete();
+            if (existingFile.exists()) {
+                existingFile.delete();
             }
 
-            manager.exportGeoPackage(packageName, exportDirectory);
+
+            manager.exportGeoPackage(mPackageName, exportDirectory);
+
+            File exportedFile = new File(exportDirectory, String.format("%ws.%s", mPackageName, GEO_PACKAGE_EXTENSION));
+
+            if(exportedFile.exists()){
+                return exportedFile;
+            }
+
+            return null;
 
             //        Log.i(LOG_NAME, "Created: " + exportedFile.getPath());
 
@@ -70,6 +79,7 @@ public class GeoPackageDataContext {
 
         } else {
 
+            return null;
 //            Log.w(LOG_NAME,
 
             //"To export the GeoPackage, grant GeoPackageSDKTests Storage permission on the emulator or phone");

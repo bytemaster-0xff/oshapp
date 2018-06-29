@@ -20,6 +20,7 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout mShowDatabases;
     private LinearLayout mShowSensorHubs;
     private LinearLayout mShowMap;
+    private LinearLayout mExport;
     private LinearLayout mShowFeatures;
     private LinearLayout mShowAquire;
 
@@ -62,6 +63,15 @@ public class MainActivity extends AppCompatActivity {
         });
         mShowMap.setVisibility(View.INVISIBLE);
 
+        mExport = findViewById(R.id.main_export_menu);
+        mExport.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showExport();
+            }
+        });
+        mExport.setVisibility(View.INVISIBLE);
+
         mShowFeatures = findViewById(R.id.main_features_menu);
         mShowFeatures.setOnClickListener(new Button.OnClickListener() {
             @Override
@@ -70,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         mShowFeatures.setVisibility(View.INVISIBLE);
+
 
         mShowAquire = findViewById(R.id.main_acquire_menu);
         mShowAquire.setOnClickListener(new Button.OnClickListener() {
@@ -115,6 +126,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void showExport() {
+        Intent myIntent = new Intent(this,  PackageMaintenance.class);
+        myIntent.putExtra(MainActivity.EXTRA_DB_NAME, mCurrentPackageName);
+        this.startActivityForResult(myIntent, 100);
+    }
 
     private void showAquire() {
         Intent myIntent = new Intent(this, AcquireActivity.class);
@@ -153,6 +169,7 @@ public class MainActivity extends AppCompatActivity {
             mShowMap.setVisibility(View.VISIBLE);
             mShowFeatures.setVisibility(View.VISIBLE);
             mShowAquire.setVisibility(View.VISIBLE);
+            mExport.setVisibility(View.VISIBLE);
             mCurrentPackageName = data.getStringExtra(MainActivity.EXTRA_DB_NAME);
             mCurrentDBName.setText(data.getStringExtra(MainActivity.EXTRA_DB_NAME));
 
