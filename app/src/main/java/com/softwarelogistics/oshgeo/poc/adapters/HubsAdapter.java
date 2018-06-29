@@ -22,8 +22,10 @@ public class HubsAdapter extends ArrayAdapter<OpenSensorHub> {
     private Typeface mFontAwesome;
     private List<OpenSensorHub> mHubs;
     private RemoveHubHandler mRemoveHubHandler;
+    private EditHubHandler mEditHubHandler;
 
-    public HubsAdapter(@NonNull Context context, int resource, List<OpenSensorHub> hubs, RemoveHubHandler removeHubHandler) {
+    public HubsAdapter(@NonNull Context context, int resource, List<OpenSensorHub> hubs,
+                       RemoveHubHandler removeHubHandler, EditHubHandler editHubHandler) {
         super(context, resource, hubs);
         mRowResourceId = resource;
 
@@ -31,6 +33,7 @@ public class HubsAdapter extends ArrayAdapter<OpenSensorHub> {
         AssetManager assets = context.getAssets();
         mFontAwesome = Typeface.createFromAsset(assets, "fonts/fa-regular-400.ttf");
         mRemoveHubHandler = removeHubHandler;
+        mEditHubHandler = editHubHandler;
     }
 
     TextView.OnClickListener removeHandler = new TextView.OnClickListener() {
@@ -41,20 +44,31 @@ public class HubsAdapter extends ArrayAdapter<OpenSensorHub> {
         }
     };
 
+    TextView.OnClickListener editHandler = new TextView.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+        OpenSensorHub hub = mHubs.get((Integer) view.getTag());
+        mEditHubHandler.onEditHub(hub);
+        }
+    };
+
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         LayoutInflater inflater = ((Activity)getContext()).getLayoutInflater();
         View row = inflater.inflate(mRowResourceId, parent, false);
 
-        TextView hubName= row.findViewById(R.id.row_db_hub_name);
+        TextView hubName= row.findViewById(R.id.row_hub_name);
         OpenSensorHub hub = mHubs.get(position);
         hubName.setText(hub.Name);
 
-        TextView removeDb = row.findViewById(R.id.row_db_textview_remove_hub);
-        removeDb.setTag(position);
-        removeDb.setOnClickListener(removeHandler);
-        removeDb.setTypeface(mFontAwesome);
+        TextView removeHub = row.findViewById(R.id.row_hub_textview_remove_hub);
+        removeHub.setTag(position);
+        removeHub.setOnClickListener(removeHandler);
+
+        TextView editHub = row.findViewById(R.id.row_hub_textview_edit_hub);
+        editHub.setTag(position);
+        editHub.setOnClickListener(editHandler);
 
         return row;
     }

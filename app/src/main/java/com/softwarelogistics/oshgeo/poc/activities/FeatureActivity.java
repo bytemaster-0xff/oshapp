@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
@@ -34,6 +35,7 @@ public class FeatureActivity extends AppCompatActivity {
     Button mCancelButton;
     Button mSetLocationButton;
     LatLng mFeatureLocation;
+    TextView mLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +45,7 @@ public class FeatureActivity extends AppCompatActivity {
         mGeoPackgeName = this.getIntent().getStringExtra(MainActivity.EXTRA_DB_NAME);
         mFeatureTableName = this.getIntent().getStringExtra(FeatureActivity.FEATURE_TABLE_NAME);
 
+        mLocation = findViewById(R.id.feature_location);
         mFeatureName = findViewById(R.id.feature_name);
         mFeatureDescription = findViewById(R.id.feature_description);
         mCancelButton = findViewById(R.id.feature_cancel);
@@ -73,7 +76,7 @@ public class FeatureActivity extends AppCompatActivity {
 
                 GeoDataContext ctx = new GeoDataContext(FeatureActivity.this);
                 OSHDataContext hubsContext = ctx.getOSHDataContext(mGeoPackgeName);
-                hubsContext.addFeature(mFeatureTableName, mMapFeature);
+                hubsContext.saveFeature(mFeatureTableName, mMapFeature);
 
                 FeatureActivity.this.finish();
             }
@@ -84,8 +87,12 @@ public class FeatureActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent pickLocationIntent = new Intent(FeatureActivity.this, LocationPicker.class);
+                if(mFeatureLocation != null){
+                    pickLocationIntent.putExtra(LocationPicker.EXTRA_LOCATION_SET_LATITUDE, mFeatureLocation.latitude);
+                    pickLocationIntent.putExtra(LocationPicker.EXTRA_LOCATION_SET_LONGITUDE, mFeatureLocation.longitude);
+                }
+                
                 startActivityForResult(pickLocationIntent, SELECTLOCATION_REQUESTION_ID );
-
             }
         });
 
@@ -94,7 +101,8 @@ public class FeatureActivity extends AppCompatActivity {
             getMapFeature(mMapFeatureId);
         }
         else {
-            mMapFeatureId = 0;
+            mMapFeature = new MapFeature();
+            mLocation.setText("not set");
         }
     }
 
@@ -106,6 +114,7 @@ public class FeatureActivity extends AppCompatActivity {
         mFeatureLocation = mMapFeature.Location;
         mFeatureName.setText(mMapFeature.Name);
         mFeatureDescription.setText(mMapFeature.Description);
+        mLocation.setText(String.format("%.6f x %.6f", mMapFeature.Location.latitude, mMapFeature.Location.longitude));
     }
 
     @Override
@@ -116,6 +125,7 @@ public class FeatureActivity extends AppCompatActivity {
             double lat = data.getDoubleExtra(LocationPicker.EXTRA_LOCATION_SET_LATITUDE, 0);
             double lng = data.getDoubleExtra(LocationPicker.EXTRA_LOCATION_SET_LONGITUDE, 0);
             mFeatureLocation = new LatLng(lat, lng);
+            mLocation.setText(String.format("%.6f x %.6f", mFeatureLocation.latitude, mFeatureLocation.longitude));
         }
     }
 

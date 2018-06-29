@@ -13,6 +13,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.softwarelogistics.oshgeo.poc.R;
+import com.softwarelogistics.oshgeo.poc.adapters.EditHubHandler;
 import com.softwarelogistics.oshgeo.poc.adapters.HubsAdapter;
 import com.softwarelogistics.oshgeo.poc.adapters.RemoveHubHandler;
 import com.softwarelogistics.oshgeo.poc.models.OpenSensorHub;
@@ -21,7 +22,7 @@ import com.softwarelogistics.oshgeo.poc.repos.OSHDataContext;
 
 import java.util.List;
 
-public class HubsActivity extends AppCompatActivityBase implements RemoveHubHandler {
+public class HubsActivity extends AppCompatActivityBase implements RemoveHubHandler, EditHubHandler {
 
     String mGeoPackageName;
     List<OpenSensorHub> mHubs;
@@ -51,7 +52,7 @@ public class HubsActivity extends AppCompatActivityBase implements RemoveHubHand
             }
         });
 
-        mHubsAdapter = new HubsAdapter(this, R.layout.list_row_sensor_hub, mHubs, this);
+        mHubsAdapter = new HubsAdapter(this, R.layout.list_row_sensor_hub, mHubs, this, this);
 
         mHubsListView.setAdapter(mHubsAdapter);
         mHubsListView.invalidate();
@@ -111,5 +112,13 @@ public class HubsActivity extends AppCompatActivityBase implements RemoveHubHand
                     }})
                 .setNegativeButton(android.R.string.no, null).show();
 
+    }
+
+    @Override
+    public void onEditHub(OpenSensorHub hub) {
+        Intent intent = new Intent(this, HubActivity.class);
+        intent.putExtra(MainActivity.EXTRA_DB_NAME, mGeoPackageName);
+        intent.putExtra(HubActivity.HUB_ID, hub.Id);
+        startActivity(intent);
     }
 }

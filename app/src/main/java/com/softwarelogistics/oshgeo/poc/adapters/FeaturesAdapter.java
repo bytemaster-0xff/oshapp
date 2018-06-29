@@ -22,11 +22,13 @@ public class FeaturesAdapter extends ArrayAdapter<MapFeature> {
     private Typeface mFontAwesome;
     private List<MapFeature> mFeatures;
     private RemoveFeatureHandler mRemoveFeatureHandler;
+    private EditFeatureHandler mEditFeatureHandler;
 
     public FeaturesAdapter(@NonNull Context context, int resource, List<MapFeature> features,
-                           RemoveFeatureHandler  removeFeatureHandler) {
+                           RemoveFeatureHandler  removeFeatureHandler, EditFeatureHandler editFeatureHandler) {
         super(context, resource, features);
         mRowResourceId = resource;
+        mEditFeatureHandler = editFeatureHandler;
 
         mFeatures = features;
         AssetManager assets = context.getAssets();
@@ -34,11 +36,19 @@ public class FeaturesAdapter extends ArrayAdapter<MapFeature> {
         mRemoveFeatureHandler  = removeFeatureHandler;
     }
 
-    TextView.OnClickListener remoteFeatureTable = new TextView.OnClickListener() {
+    TextView.OnClickListener removeFeatureTable = new TextView.OnClickListener() {
         @Override
         public void onClick(View view) {
-            MapFeature mapFeature = mFeatures.get((Integer) view.getTag());
-            mRemoveFeatureHandler.onRemoveFeature(mapFeature.Id);
+        MapFeature mapFeature = mFeatures.get((Integer) view.getTag());
+        mRemoveFeatureHandler.onRemoveFeature(mapFeature.Id);
+    }
+    };
+
+    TextView.OnClickListener editFeatureTable = new TextView.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+        MapFeature mapFeature = mFeatures.get((Integer) view.getTag());
+        mEditFeatureHandler.onEditFeature(mapFeature.Id);
         }
     };
 
@@ -54,8 +64,11 @@ public class FeaturesAdapter extends ArrayAdapter<MapFeature> {
 
         TextView removeDb = row.findViewById(R.id.row_feature_remove);
         removeDb.setTag(position);
-        removeDb.setOnClickListener(remoteFeatureTable);
-        removeDb.setTypeface(mFontAwesome);
+        removeDb.setOnClickListener(removeFeatureTable);
+
+        TextView editFeature = row.findViewById(R.id.row_feature_edit);
+        editFeature.setTag(position);
+        editFeature.setOnClickListener(editFeatureTable);
 
         return row;
     }

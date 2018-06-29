@@ -128,16 +128,28 @@
             android:layout_height="48dp"
             android:hint="hub port"
             android:inputType="numberDecimal" />
-    <TextView
-        android:layout_marginTop="10dp"
-        android:id="@+id/link_set_location"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="Set Location"
-     />
 
-    <Button
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:textSize="24dp"
+                android:id="@+id/hub_location"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:text="24.12345 x -128.2342" />
+            <Button
+                android:id="@+id/link_set_location"
+                android:layout_width="48dp"
+                android:layout_alignParentRight="true"
+                android:fontFamily="@font/fa_solid_900"
+                android:layout_height="48dp"
+                android:text="@string/icon_map_pin" />
+        </RelativeLayout>
+
+
+        <Button
         android:layout_marginBottom="20dp"
         android:id="@+id/button_save_hub"
         android:text="Save"

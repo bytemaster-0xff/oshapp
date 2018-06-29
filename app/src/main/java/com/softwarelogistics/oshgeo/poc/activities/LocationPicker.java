@@ -69,6 +69,13 @@ public class LocationPicker extends AppCompatActivity
 
         mSelectedPointLabel.setText("Please select a point");
 
+        if(getIntent().hasExtra(EXTRA_LOCATION_SET_LONGITUDE) &&
+                getIntent().hasExtra(EXTRA_LOCATION_SET_LATITUDE)){
+            mSelectedLocation = new LatLng(getIntent().getDoubleExtra(EXTRA_LOCATION_SET_LATITUDE, 0),
+                    getIntent().getDoubleExtra(EXTRA_LOCATION_SET_LONGITUDE,0));
+            mSelectedPointLabel.setText(String.format("%.6f x %.6f", mSelectedLocation.latitude, mSelectedLocation.longitude));
+        }
+
         mLocationClient = LocationServices.getFusedLocationProviderClient(this);
     }
 
@@ -101,13 +108,19 @@ public class LocationPicker extends AppCompatActivity
 
         mMap.setMyLocationEnabled(true);
 
-        mLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
-            @Override
-            public void onSuccess(Location location) {
-                LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
-            }
-        });
+        if(mSelectedLocation != null){
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mSelectedLocation, 13));
+            mCurrentMapMarker = mMap.addMarker(new MarkerOptions().position(mSelectedLocation));
+        }
+        else {
+            mLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
+                }
+            });
+        }
 
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override

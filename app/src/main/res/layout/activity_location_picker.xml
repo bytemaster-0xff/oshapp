@@ -20,8 +20,7 @@
         tools:context=".MapsActivity" />
 
 
-    <LinearLayout
-        android:gravity="right"
+    <RelativeLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="60dp"
@@ -30,18 +29,27 @@
 
         <TextView
             android:id="@+id/location_picker_selected_location"
-            android:layout_width="100dp"
+            android:layout_marginLeft="10dp"
+            android:layout_centerVertical="true"
+            android:layout_width="wrap_content"
+            android:text="24.123456 x -120.123456"
             android:layout_height="wrap_content" />
         <Button
             android:id="@+id/location_picker_button_set_location"
-            android:layout_width="128dp"
+            android:layout_width="90dp"
+            android:layout_centerVertical="true"
             android:layout_height="48dp"
+            android:layout_marginRight="110dp"
+            android:layout_alignParentRight="true"
             android:text="SET" />
 
         <Button
             android:id="@+id/location_picker_button_cancel_location"
-            android:layout_width="128dp"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="10dp"
+            android:layout_width="90dp"
+            android:layout_alignParentRight="true"
             android:layout_height="48dp"
             android:text="CANCEL" />
-    </LinearLayout>
+    </RelativeLayout>
 </android.support.constraint.ConstraintLayout>

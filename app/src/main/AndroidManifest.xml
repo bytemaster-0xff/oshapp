@@ -25,6 +25,10 @@
         tools:replace="android:allowBackup">
 
         <!--
+
+            Client ID for OAuth
+            999397576965-a4u9en1nenirqm7plmoi185c7i6k4rua.apps.googleusercontent.com
+
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
              Note that the API key is linked to the encryption key used to sign the APK.

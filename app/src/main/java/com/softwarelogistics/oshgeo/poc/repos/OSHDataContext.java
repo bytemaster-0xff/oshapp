@@ -370,6 +370,8 @@ public class OSHDataContext {
 
         try {
             addContentTables(tableName, description);
+            createHubsRelatedTables(tableName);
+            createSensorsRelatedTables(tableName);
         }
         catch(SQLException ex){
 
@@ -560,6 +562,15 @@ public class OSHDataContext {
         }
     }
 
+    public OpenSensorHub saveHub(OpenSensorHub hub){
+        if(hub.Id == 0){
+            return addHub(hub);
+        }
+        else {
+            updateHub(hub);
+            return hub;
+        }
+    }
 
     public OpenSensorHub addHub(OpenSensorHub hub) {
         FeatureDao dao = mGeoPackage.getFeatureDao(HUB_TABLE_NAME);
@@ -589,7 +600,6 @@ public class OSHDataContext {
         FeatureDao hubDao = mGeoPackage.getFeatureDao(HUB_TABLE_NAME);
         FeatureCursor hubCursor = hubDao.queryForId(updatedHub.Id);
         try {
-
             if (hubCursor.moveToNext()) {
                 FeatureRow row = hubCursor.getRow();
                 hubToFeatureRow(updatedHub, row);
@@ -605,11 +615,20 @@ public class OSHDataContext {
         mGeoPackage.deleteTable(featureTable);
     }
 
-    public MapFeature addFeature(String featureTable, MapFeature feature){
+    public MapFeature saveFeature(String featureTable, MapFeature feature){
         FeatureDao featureDao = mGeoPackage.getFeatureDao(featureTable);
-        FeatureRow newRow = featureDao.newRow();
-        featureDao.create(featureRowFromFeature(feature, newRow));
-        feature.Id = newRow.getId();
+        if(feature.Id > 0) {
+            FeatureCursor featureCursor = featureDao.queryForId(feature.Id);
+            if (featureCursor.moveToNext()) {
+                FeatureRow row = featureCursor.getRow();
+                featureDao.update(featureRowFromFeature(feature, row));
+            }
+        }
+        else {
+            FeatureRow newRow = featureDao.newRow();
+            featureDao.create(featureRowFromFeature(feature, newRow));
+            feature.Id = newRow.getId();
+        }
         return feature;
     }
 
@@ -817,7 +836,7 @@ public class OSHDataContext {
     private void createHubsRelatedTables(String featureTableName) {
         RelatedTablesExtension relatedTables = new RelatedTablesExtension(mGeoPackage);
 
-        int columnIndex = 0;
+        int columnIndex = UserMappingTable.numRequiredColumns();
         List<UserCustomColumn> columns = new ArrayList<>();
         columns.add(UserCustomColumn.createColumn(columnIndex++, DublinCoreType.DESCRIPTION.getName(), GeoPackageDataType.TEXT, false, null));
         columns.add(UserCustomColumn.createColumn(columnIndex++, DublinCoreType.TITLE.getName(), GeoPackageDataType.TEXT, false, null));
@@ -840,7 +859,7 @@ public class OSHDataContext {
 
     private void createSensorsRelatedTables(String featureTableName) {
         RelatedTablesExtension relatedTables = new RelatedTablesExtension(mGeoPackage);
-        int columnIndex = 0;
+        int columnIndex = UserMappingTable.numRequiredColumns();
         List<UserCustomColumn> columns = new ArrayList<>();
         columns.add(UserCustomColumn.createColumn(columnIndex++, DublinCoreType.DESCRIPTION.getName(), GeoPackageDataType.TEXT, false, null));
         columns.add(UserCustomColumn.createColumn(columnIndex++, DublinCoreType.TITLE.getName(), GeoPackageDataType.TEXT, false, null));

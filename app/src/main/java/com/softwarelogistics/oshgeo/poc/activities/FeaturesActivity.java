@@ -12,6 +12,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.softwarelogistics.oshgeo.poc.R;
+import com.softwarelogistics.oshgeo.poc.adapters.EditFeatureHandler;
 import com.softwarelogistics.oshgeo.poc.adapters.FeaturesAdapter;
 import com.softwarelogistics.oshgeo.poc.adapters.RemoveFeatureHandler;
 import com.softwarelogistics.oshgeo.poc.models.MapFeature;
@@ -21,7 +22,7 @@ import com.softwarelogistics.oshgeo.poc.repos.OSHDataContext;
 
 import java.util.List;
 
-public class FeaturesActivity extends AppCompatActivityBase implements RemoveFeatureHandler {
+public class FeaturesActivity extends AppCompatActivityBase implements RemoveFeatureHandler, EditFeatureHandler {
 
     public final static String FEATURE_TABLE_NAME  = "FEATURE_TABLE_NAME";
 
@@ -68,7 +69,7 @@ public class FeaturesActivity extends AppCompatActivityBase implements RemoveFea
         GeoDataContext ctx = new GeoDataContext(this);
         OSHDataContext hubsContext = ctx.getOSHDataContext(mGeoPackageName);
         mMapFeatures = hubsContext.getFeatures(mFeatureTableName);
-        mFeaturesAdapter = new FeaturesAdapter(this, R.layout.list_row_feature, mMapFeatures, this);
+        mFeaturesAdapter = new FeaturesAdapter(this, R.layout.list_row_feature, mMapFeatures, this, this);
         mMapFeaturesList.setAdapter(mFeaturesAdapter);
     }
 
@@ -111,5 +112,14 @@ public class FeaturesActivity extends AppCompatActivityBase implements RemoveFea
                     }})
                 .setNegativeButton(android.R.string.no, null).show();
 
+    }
+
+    @Override
+    public void onEditFeature(long featureId) {
+        Intent intent = new Intent(this, FeatureActivity.class);
+        intent.putExtra(MainActivity.EXTRA_DB_NAME, mGeoPackageName);
+        intent.putExtra(FeatureActivity.FEATURE_TABLE_NAME, mFeatureTableName);
+        intent.putExtra(FeatureActivity.FEATURE_ID, featureId);
+        startActivity(intent);
     }
 }
