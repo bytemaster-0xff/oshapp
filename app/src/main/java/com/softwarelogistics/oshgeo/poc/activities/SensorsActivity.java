@@ -99,6 +99,10 @@ public class SensorsActivity extends AppCompatActivity {
                 SensorReading reading = new SensorReading();
                 reading.HubId = mHub.Id;
                 reading.Timestamp = new Date();
+                GeoDataContext ctx = new GeoDataContext(SensorsActivity.this);
+                OSHDataContext oshCtx = ctx.getOSHDataContext(mDatabaseName);
+                mHub.LastContact = new Date();
+                oshCtx.updateHub(mHub);
 
                 for(SensorValue value: sensorValueList){
                     Log.d("log.osh", value.Name + " " + value.SensorId + " " + value.Units + " " + value.StrValue);

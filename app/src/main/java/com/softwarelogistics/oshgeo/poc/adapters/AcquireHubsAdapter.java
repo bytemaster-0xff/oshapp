@@ -2,6 +2,7 @@ package com.softwarelogistics.oshgeo.poc.adapters;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
@@ -21,12 +22,14 @@ public class AcquireHubsAdapter extends ArrayAdapter<OpenSensorHub> {
     private List<OpenSensorHub> mHubs;
     private AcquireListHandler mRefreshHubsHandler;
     private LatLng mCurrentLocation;
+    private String mSSID;
 
-    public AcquireHubsAdapter(@NonNull Context context, int resource, List<OpenSensorHub> hubs,
+    public AcquireHubsAdapter(@NonNull Context context, int resource, List<OpenSensorHub> hubs, String ssid,
                               LatLng currentLocation, AcquireListHandler refreshHubHandler) {
         super(context, resource, hubs);
         mRowResourceId = resource;
 
+        mSSID = ssid;
         mHubs = hubs;
         mRefreshHubsHandler = refreshHubHandler;
         mCurrentLocation = currentLocation;
@@ -64,6 +67,14 @@ public class AcquireHubsAdapter extends ArrayAdapter<OpenSensorHub> {
         }
     };
 
+    TextView.OnClickListener showSensorsHandler = new TextView.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            OpenSensorHub hub = mHubs.get((Integer) view.getTag());
+            mRefreshHubsHandler.onShowSensors(hub);
+        }
+    };
+
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
@@ -80,6 +91,9 @@ public class AcquireHubsAdapter extends ArrayAdapter<OpenSensorHub> {
 
         txt = row.findViewById(R.id.row_acquire_hub_distance);
         double heading = GeoUtils.bearing(mCurrentLocation, hub.Location);
+        if(heading < 0){
+            heading = 360.0 + heading;
+        }
         txt.setText(String.format("%.1f°", heading));
 
         double distanceMeters = GeoUtils.distance(hub.Location, mCurrentLocation);
@@ -91,11 +105,15 @@ public class AcquireHubsAdapter extends ArrayAdapter<OpenSensorHub> {
             txt.setText(String.format("%.2f m", distanceMeters));
         }
 
+
+        TextView statusText = row.findViewById(R.id.row_acquire_hub_status);
         txt = row.findViewById(R.id.row_acquire_hub_last_contact);
         if(hub.LastContact != null) {
+            statusText.setText("OK");
             txt.setText(hub.LastContact.toString());
         }
         else {
+            statusText.setText("Not Ready");
             txt.setText("");
         }
 
@@ -103,19 +121,36 @@ public class AcquireHubsAdapter extends ArrayAdapter<OpenSensorHub> {
         showHub.setTag(position);
         showHub.setOnClickListener(showHubHandler);
 
+        TextView showSensors = row.findViewById(R.id.row_acquire_view_sensors);
+        showSensors.setTag(position);
+        showSensors.setOnClickListener(showSensorsHandler);
+
+        TextView refreshHub = row.findViewById(R.id.row_acquire_hub_refresh);
+        refreshHub.setTag(position);
+
+
         TextView connectHub = row.findViewById(R.id.row_acquire_wifi);
         if(hub.LocalWiFi) {
             connectHub.setTag(position);
             connectHub.setVisibility(View.VISIBLE);
+            if(mSSID != null && mSSID.equalsIgnoreCase(hub.SSID)){
+                connectHub.setTextColor(Color.GREEN);
+                refreshHub.setTextColor(Color.GREEN);
+                refreshHub.setOnClickListener(refreshHandler);
+            }
+            else {
+                refreshHub.setTextColor(Color.LTGRAY);
+                connectHub.setTextColor(Color.GRAY);
+                refreshHub.setOnClickListener(null);
+            }
+
             connectHub.setOnClickListener(connectWiFiHandler);
         }
         else {
+            refreshHub.setOnClickListener(refreshHandler);
             connectHub.setVisibility(View.GONE);
+            refreshHub.setTextColor(Color.GREEN);
         }
-
-        TextView refreshHub = row.findViewById(R.id.row_acquire_hub_refresh);
-        refreshHub.setTag(position);
-        refreshHub.setOnClickListener(refreshHandler);
 
         TextView navigateToHub = row.findViewById(R.id.row_acquire_hub_navigate);
         navigateToHub.setTag(position);

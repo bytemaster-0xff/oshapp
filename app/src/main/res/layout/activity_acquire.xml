@@ -15,6 +15,7 @@
         <TextView
             android:text="Internet:"
             android:width="60dp"
+            android:layout_marginLeft="30dp"
             android:textColor="#000"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
@@ -74,5 +75,36 @@
             android:layout_height="match_parent"
             tools:context=".MapsActivity" />
     </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/acquire_progress_mask"
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:layout_height="match_parent">
+        <LinearLayout
+            android:background="#a0222222"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        </LinearLayout>
+
+        <ProgressBar
+            style="?android:attr/progressBarStyle"
+            android:layout_marginTop="100dp"
+            android:layout_centerHorizontal="true"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:id="@+id/acquire_progress_spinner" />
+
+        <TextView
+            android:text="Doing Something"
+            android:textColor="#FFFFFF"
+            android:textSize="20dp"
+            android:layout_marginTop="50dp"
+            android:textAlignment="center"
+            android:id="@+id/acquire_progress_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </RelativeLayout >
 
 </android.support.constraint.ConstraintLayout>

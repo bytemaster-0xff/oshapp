@@ -642,7 +642,7 @@ public class OSHDataContext {
         try {
             if (hubCursor.moveToNext()) {
                 FeatureRow row = hubCursor.getRow();
-                hubToFeatureRow(updatedHub, row);
+                row = hubToFeatureRow(updatedHub, row);
                 hubDao.update(row);
             }
         }

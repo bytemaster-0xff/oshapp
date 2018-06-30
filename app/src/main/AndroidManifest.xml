@@ -12,6 +12,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
 
     <!-- Added tools:replace -->
@@ -89,14 +90,19 @@
         <activity
             android:name=".activities.FeatureActivity"
             android:label="@string/title_activity_feature_detail" />
-        <activity android:name=".activities.AcquireActivity"
-            android:label="@string/title_activity_acquire"/>
-        <activity android:name=".activities.PackageMaintenanceActivity"
-            android:label="@string/title_activity_package_maintenance"/>
-        <activity android:name=".activities.SensorPickerActivity"
+        <activity
+            android:name=".activities.AcquireActivity"
+            android:label="@string/title_activity_acquire" />
+        <activity
+            android:name=".activities.PackageMaintenanceActivity"
+            android:label="@string/title_activity_package_maintenance" />
+        <activity
+            android:name=".activities.SensorPickerActivity"
             android:label="@string/title_activity_sensor_picker" />
-        <activity android:name=".activities.FeatureAttributesActivity"
-            android:label="@string/title_activity_feature_attributes"></activity>
+        <activity
+            android:name=".activities.FeatureAttributesActivity"
+            android:label="@string/title_activity_feature_attributes" />
+        <activity android:name=".activities.NavigateToHubActivity"></activity>
     </application>
 
 </manifest>
