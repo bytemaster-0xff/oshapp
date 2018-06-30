@@ -112,6 +112,7 @@
 
     <TextView
         android:textSize="28dp"
+        android:textColor="#00FF00"
         android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
         android:text="@string/icon_map_pin"
@@ -124,6 +125,7 @@
 
     <TextView
         android:textSize="28dp"
+        android:textColor="#00FF00"
         android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
         android:text="@string/icon_navigate"

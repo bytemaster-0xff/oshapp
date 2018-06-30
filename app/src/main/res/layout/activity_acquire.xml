@@ -5,10 +5,58 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".activities.AcquireActivity">
+
+    <LinearLayout
+        android:padding="3dp"
+        android:background="#F0F0F0"
+        android:layout_width="match_parent"
+        android:id="@+id/acquire_connection_status"
+        android:layout_height="wrap_content">
+        <TextView
+            android:text="Internet:"
+            android:width="60dp"
+            android:textColor="#000"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/acquire_internet_status"
+            android:width="30dp"
+            android:fontFamily="@font/fa_solid_900"
+            android:text="@string/icon_signal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:text="WiFi:"
+            android:textColor="#000"
+            android:width="40dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:width="30dp"
+            android:fontFamily="@font/fa_solid_900"
+            android:text="@string/icon_wifi"
+            android:id="@+id/acquire_wifi_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:text="SSID:"
+            android:textColor="#000"
+            android:width="40dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:text="CaaaDeWolf"
+            android:id="@+id/acquire_ssid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
     <ListView
         android:id="@+id/acquire_list_hubs"
         android:layout_width="match_parent"
-        android:layout_height="250dp"></ListView>
+        app:layout_constraintTop_toBottomOf="@+id/acquire_connection_status"
+        android:layout_height="250dp">
+    </ListView>
 
     <LinearLayout
         android:layout_width="match_parent"
