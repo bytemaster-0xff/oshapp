@@ -19,7 +19,6 @@ import java.util.List;
 
 public class HubsAdapter extends ArrayAdapter<OpenSensorHub> {
     private int mRowResourceId;
-    private Typeface mFontAwesome;
     private List<OpenSensorHub> mHubs;
     private RemoveHubHandler mRemoveHubHandler;
     private EditHubHandler mEditHubHandler;
@@ -30,8 +29,6 @@ public class HubsAdapter extends ArrayAdapter<OpenSensorHub> {
         mRowResourceId = resource;
 
         mHubs = hubs;
-        AssetManager assets = context.getAssets();
-        mFontAwesome = Typeface.createFromAsset(assets, "fonts/fa-regular-400.ttf");
         mRemoveHubHandler = removeHubHandler;
         mEditHubHandler = editHubHandler;
     }
