@@ -16,14 +16,14 @@ import com.softwarelogistics.oshgeo.poc.utils.GeoUtils;
 
 import java.util.List;
 
-public class AquireHubsAdapter extends ArrayAdapter<OpenSensorHub> {
+public class AcquireHubsAdapter extends ArrayAdapter<OpenSensorHub> {
     private int mRowResourceId;
     private List<OpenSensorHub> mHubs;
-    private RefreshHubHandler mRefreshHubsHandler;
+    private AcquireListHandler mRefreshHubsHandler;
     private LatLng mCurrentLocation;
 
-    public AquireHubsAdapter(@NonNull Context context, int resource, List<OpenSensorHub> hubs,
-                             LatLng currentLocation, RefreshHubHandler refreshHubHandler) {
+    public AcquireHubsAdapter(@NonNull Context context, int resource, List<OpenSensorHub> hubs,
+                              LatLng currentLocation, AcquireListHandler refreshHubHandler) {
         super(context, resource, hubs);
         mRowResourceId = resource;
 
@@ -37,6 +37,30 @@ public class AquireHubsAdapter extends ArrayAdapter<OpenSensorHub> {
         public void onClick(View view) {
             OpenSensorHub hub = mHubs.get((Integer) view.getTag());
             mRefreshHubsHandler.onRefreshHub(hub);
+        }
+    };
+
+    TextView.OnClickListener connectWiFiHandler = new TextView.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            OpenSensorHub hub = mHubs.get((Integer) view.getTag());
+            mRefreshHubsHandler.onConnectHub(hub);
+        }
+    };
+
+    TextView.OnClickListener showHubHandler = new TextView.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            OpenSensorHub hub = mHubs.get((Integer) view.getTag());
+            mRefreshHubsHandler.onShowHubHandler(hub);
+        }
+    };
+
+    TextView.OnClickListener navigateToHubHandler = new TextView.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            OpenSensorHub hub = mHubs.get((Integer) view.getTag());
+            mRefreshHubsHandler.onNavigateToHub(hub);
         }
     };
 
@@ -75,9 +99,27 @@ public class AquireHubsAdapter extends ArrayAdapter<OpenSensorHub> {
             txt.setText("");
         }
 
+        TextView showHub = row.findViewById(R.id.row_acquire_show);
+        showHub.setTag(position);
+        showHub.setOnClickListener(showHubHandler);
+
+        TextView connectHub = row.findViewById(R.id.row_acquire_wifi);
+        if(hub.LocalWiFi) {
+            connectHub.setTag(position);
+            connectHub.setVisibility(View.VISIBLE);
+            connectHub.setOnClickListener(connectWiFiHandler);
+        }
+        else {
+            connectHub.setVisibility(View.GONE);
+        }
+
         TextView refreshHub = row.findViewById(R.id.row_acquire_hub_refresh);
         refreshHub.setTag(position);
         refreshHub.setOnClickListener(refreshHandler);
+
+        TextView navigateToHub = row.findViewById(R.id.row_acquire_hub_navigate);
+        navigateToHub.setTag(position);
+        navigateToHub.setOnClickListener(navigateToHubHandler);
 
         return row;
     }

@@ -21,7 +21,9 @@
     <!-- Icon to Unicode mapping https://fontawesome.com/icons?d=gallery -->
     <string name="icon_folder">&#xf07C;</string>
     <string name="icon_trash">&#xf2ed;</string>
+    <string name="icon_navigate">&#xf124;</string>
     <string name="icon_view">&#xf06e;</string>
+    <string name="icon_wifi">&#xf1eb;</string>
     <string name="icon_map">&#xf59f;</string>
     <string name="icon_map_pin">&#xf3C5;</string>
     <string name="icon_edit">&#xf044;</string>

@@ -8,16 +8,23 @@
     <ListView
         android:id="@+id/acquire_list_hubs"
         android:layout_width="match_parent"
-        android:layout_height="200dp"></ListView>
+        android:layout_height="250dp"></ListView>
 
-    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:map="http://schemas.android.com/apk/res-auto"
-        app:layout_constraintTop_toBottomOf="@+id/acquire_list_hubs"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/aquire_map"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        tools:context=".MapsActivity" />
+        android:layout_marginBottom="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/acquire_list_hubs">
+
+        <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:map="http://schemas.android.com/apk/res-auto"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:id="@+id/aquire_map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:context=".MapsActivity" />
+    </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>

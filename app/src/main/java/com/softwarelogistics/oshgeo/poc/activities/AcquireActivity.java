@@ -1,8 +1,11 @@
 package com.softwarelogistics.oshgeo.poc.activities;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -16,21 +19,23 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.softwarelogistics.oshgeo.poc.R;
-import com.softwarelogistics.oshgeo.poc.adapters.AquireHubsAdapter;
-import com.softwarelogistics.oshgeo.poc.adapters.RefreshHubHandler;
+import com.softwarelogistics.oshgeo.poc.adapters.AcquireHubsAdapter;
+import com.softwarelogistics.oshgeo.poc.adapters.AcquireListHandler;
 import com.softwarelogistics.oshgeo.poc.models.OpenSensorHub;
 import com.softwarelogistics.oshgeo.poc.repos.GeoDataContext;
 import com.softwarelogistics.oshgeo.poc.repos.OSHDataContext;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AcquireActivity extends AppCompatActivity
-        implements OnMapReadyCallback, RefreshHubHandler {
+        implements OnMapReadyCallback, AcquireListHandler {
 
-    AquireHubsAdapter mHubAdapter;
+    private AcquireHubsAdapter mHubAdapter;
     private String mGeoPackageName;
     private GoogleMap mMap;
     private List<OpenSensorHub> mHubs;
@@ -38,6 +43,8 @@ public class AcquireActivity extends AppCompatActivity
     private FusedLocationProviderClient mLocationClient;
     private ListView mHubsList;
     private SupportMapFragment mMapFragment;
+
+    private List<Marker> mHubMarkers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +55,7 @@ public class AcquireActivity extends AppCompatActivity
         mHubsList = findViewById(R.id.acquire_list_hubs);
         mGeoPackageName = getIntent().getStringExtra(MainActivity.EXTRA_DB_NAME);
         mLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        mHubMarkers = new ArrayList<>();
     }
 
     private void refreshHubs() {
@@ -55,7 +63,18 @@ public class AcquireActivity extends AppCompatActivity
         OSHDataContext hubsContext = ctx.getOSHDataContext(mGeoPackageName);
         mHubs = hubsContext.getHubs();
 
-        mHubAdapter = new AquireHubsAdapter(this, R.layout.list_row_aquire_hub, mHubs,
+        for(Marker marker : mHubMarkers){
+            marker.remove();
+        }
+
+        for(OpenSensorHub hub : mHubs){
+            MarkerOptions newMarkerOptions = new MarkerOptions().position(hub.Location);
+            newMarkerOptions.title(hub.Name);
+            Marker newMarker = mMap.addMarker(newMarkerOptions);
+            mHubMarkers.add(newMarker);
+        }
+
+        mHubAdapter = new AcquireHubsAdapter(this, R.layout.list_row_aquire_hub, mHubs,
                 mCurrentLocation,this);
 
         mHubsList.setAdapter(mHubAdapter);
@@ -68,7 +87,10 @@ public class AcquireActivity extends AppCompatActivity
     GoogleMap.OnMapClickListener mapClickListener = new GoogleMap.OnMapClickListener() {
         @Override
         public void onMapClick(LatLng latLng) {
-            mCurrentLocation = latLng;
+        mCurrentLocation = latLng;
+        mCurrentLocation = latLng;
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
+        refreshHubs();
         }
     };
 
@@ -86,10 +108,10 @@ public class AcquireActivity extends AppCompatActivity
         mLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
             @Override
             public void onSuccess(Location location) {
-                LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-                mCurrentLocation = latLng;
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
-                refreshHubs();
+            LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+            mCurrentLocation = latLng;
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
+            refreshHubs();
             }
         });
 
@@ -97,7 +119,37 @@ public class AcquireActivity extends AppCompatActivity
     }
 
     @Override
-    public void onRefreshHub(OpenSensorHub hubId) {
+    public void onRefreshHub(OpenSensorHub hub) {
+
+    }
+
+    @Override
+    public void onConnectHub(OpenSensorHub hub) {
+        WifiConfiguration config = new WifiConfiguration();
+        config.SSID = "\"" + hub.SSID + "\"";
+        config.preSharedKey = "\"" + hub.SSIDPassword + "\"";
+        WifiManager wifiManager = (WifiManager)this.getSystemService(Context.WIFI_SERVICE);
+        wifiManager.addNetwork(config);
+
+        List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
+        for( WifiConfiguration i : list ) {
+            if(i.SSID != null && i.SSID.equals("\"" + hub.SSID + "\"")) {
+                wifiManager.disconnect();
+                wifiManager.enableNetwork(i.networkId, true);
+                wifiManager.reconnect();
+
+                break;
+            }
+        }
+    }
+
+    @Override
+    public void onNavigateToHub(OpenSensorHub hub) {
+
+    }
+
+    @Override
+    public void onShowHubHandler(OpenSensorHub hub) {
 
     }
 }

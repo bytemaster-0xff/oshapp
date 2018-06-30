@@ -136,6 +136,7 @@ public class SosClient  {
         //String property = "http://sensorml.com/ont/swe/property/AirTemperature";
 
         String formatString = "%s://%s:%d/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=%s&observedProperty=%s&temporalFilter=phenomenonTime,now";
+        //String formatString = "%s://%s:%d/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=%s&observedProperty=%s";
 
         String valueUri = String.format(formatString, mHttps ? "https" : "http", mUri, mPort, offering.Identifier, field.Definition);
 
