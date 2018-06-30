@@ -1,6 +1,7 @@
 package com.softwarelogistics.oshgeo.poc.activities;
 
 import android.content.Intent;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -44,6 +45,7 @@ public class FeatureActivity extends AppCompatActivity implements RemoveRelatedS
 
     Button mAddRelatedFeatures;
 
+    ConstraintLayout mRelatedSection;
 
     FeatureRelatedSensorAdapter mRelatedSensorsAdapter;
     ListView mRelatedfeaturesList;
@@ -58,6 +60,7 @@ public class FeatureActivity extends AppCompatActivity implements RemoveRelatedS
         mFeatureTableName = this.getIntent().getStringExtra(FeatureActivity.FEATURE_TABLE_NAME);
 
         mRelatedfeaturesList = findViewById(R.id.feature_related_sensors);
+        mRelatedSection = findViewById(R.id.related_sensors_section);
 
         mLocation = findViewById(R.id.feature_location);
         mFeatureName = findViewById(R.id.feature_name);
@@ -128,6 +131,7 @@ public class FeatureActivity extends AppCompatActivity implements RemoveRelatedS
         else {
             mMapFeature = new MapFeature();
             mLocation.setText("not set");
+            mRelatedSection.setVisibility(View.GONE);
         }
     }
 

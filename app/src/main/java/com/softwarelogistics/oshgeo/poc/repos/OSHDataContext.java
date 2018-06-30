@@ -106,10 +106,8 @@ public class OSHDataContext {
 
         try{
             while(featureCursor.moveToNext()){
-                OpenSensorHub hub = new OpenSensorHub();
-                hub.Id = (long)featureCursor.getValue(featureCursor.getColumnIndex( COL_ID), GeoPackageDataType.INTEGER);
-                hub.Name = (String)featureCursor.getValue(featureCursor.getColumnIndex(COL_NAME), GeoPackageDataType.TEXT);
-                hubs.add(hub);
+                FeatureRow row = featureCursor.getRow();
+                hubs.add(hubFromFeatureRow(row));
             }
         }finally{
             featureCursor.close();

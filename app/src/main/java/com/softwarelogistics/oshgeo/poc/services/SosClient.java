@@ -146,35 +146,35 @@ public class SosClient  {
 
         try {
             String rawValue = readStringFromURL(valueUri);
-            Log.d("log.osh",  rawValue);
+            if(rawValue != null) {
+                rawValue = rawValue.trim();
+                Log.d("log.osh", rawValue);
 
-            SensorValue value = new SensorValue();
-            value.Name = field.Label;
-            value.Label = field.Label;
-            value.StrValue = rawValue;
-            value.Units = field.UnitOfMeasure;
-            value.DataType = "string";
-            String[] parts = rawValue.split(",");
-            if(parts.length == 2){
-                //TODO:  Should probably do somthing to figure out actual datatypes, for now everything is a string.
+                SensorValue value = new SensorValue();
+                value.Name = field.Label;
+                value.Label = field.Label;
+                value.StrValue = rawValue;
+                value.Units = field.UnitOfMeasure;
                 value.DataType = "string";
-                value.StrValue = parts[1];
-                value.Timestamp = DateParser.parse(parts[0]);
-            }
-            else if(parts.length == 4){
-                //TODO: Hack, if we have three values assume it's time stamp, lat and lon
-                value.DataType = "latlng";
-                value.StrValue = String.format("%s,%s", parts[1], parts[2]);
-                value.Timestamp = DateParser.parse(parts[0]);
-            }
-            else {
-                value.Timestamp = new Date();
-            }
+                String[] parts = rawValue.split(",");
+                if (parts.length == 2) {
+                    //TODO:  Should probably do somthing to figure out actual datatypes, for now everything is a string.
+                    value.DataType = "string";
+                    value.StrValue = parts[1];
+                    value.Timestamp = DateParser.parse(parts[0]);
+                } else if (parts.length == 4) {
+                    //TODO: Hack, if we have three values assume it's time stamp, lat and lon
+                    value.DataType = "latlng";
+                    value.StrValue = String.format("%s,%s", parts[1], parts[2]);
+                    value.Timestamp = DateParser.parse(parts[0]);
+                } else {
+                    value.Timestamp = new Date();
+                }
 
-            Log.d("log.osh","-------------------------------------------");
+                Log.d("log.osh", "-------------------------------------------");
 
-            return value;
-
+                return value;
+            }
         }
         catch(Exception e) {
             Log.d("log.osh",e.getLocalizedMessage());

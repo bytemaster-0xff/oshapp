@@ -6,8 +6,10 @@
     android:paddingTop="3dp"
     android:paddingBottom="3dp"
     android:layout_width="match_parent"
-    android:layout_height="48dp">
+    android:layout_height="64dp">
     <TextView
+        android:text="feature name"
+        android:textSize="20dp"
         android:id="@+id/row_feature_related_name"
         android:layout_centerVertical="true"
         android:layout_width="wrap_content"
@@ -20,6 +22,6 @@
         android:text="@string/icon_trash"
         android:fontFamily="@font/fa_solid_900"
         android:id="@+id/row_feature_related_remove"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_width="48dp"
+        android:layout_height="48dp" />
 </RelativeLayout>

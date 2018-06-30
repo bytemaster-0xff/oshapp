@@ -63,7 +63,7 @@ public class HubsAdapter extends ArrayAdapter<OpenSensorHub> {
         removeHub.setTag(position);
         removeHub.setOnClickListener(removeHandler);
 
-        TextView editHub = row.findViewById(R.id.row_hub_textview_remove_hub);
+        TextView editHub = row.findViewById(R.id.row_hub_textview_edit_hub);
         editHub.setTag(position);
         editHub.setOnClickListener(editHandler);
 

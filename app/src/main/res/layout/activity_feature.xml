@@ -76,6 +76,7 @@
     </LinearLayout>
     <android.support.constraint.ConstraintLayout
         android:layout_width="wrap_content"
+        android:id="@+id/related_sensors_section"
         app:layout_constraintTop_toBottomOf="@+id/feature_info"
         android:layout_height="0dp">
         <RelativeLayout
@@ -96,11 +97,11 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp" />
         </RelativeLayout>
-    <ListView
-        app:layout_constraintTop_toBottomOf="@+id/related_sensors_header"
-        android:layout_height="0dp"
-        android:id="@+id/feature_related_sensors"
-        android:layout_width="match_parent"/>
+        <ListView
+            app:layout_constraintTop_toBottomOf="@+id/related_sensors_header"
+            android:layout_height="0dp"
+            android:id="@+id/feature_related_sensors"
+            android:layout_width="match_parent"/>
     </android.support.constraint.ConstraintLayout>
 
 </android.support.constraint.ConstraintLayout>

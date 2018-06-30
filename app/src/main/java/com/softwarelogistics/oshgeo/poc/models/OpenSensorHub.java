@@ -9,6 +9,7 @@ import java.util.Date;
 public class OpenSensorHub {
     public long Id;
     public String Name;
+    public String Description;
 
     public LatLng Location;
     public boolean SecureConnection;
