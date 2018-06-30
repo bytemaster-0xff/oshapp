@@ -23,12 +23,15 @@ public class FeaturesAdapter extends ArrayAdapter<MapFeature> {
     private List<MapFeature> mFeatures;
     private RemoveFeatureHandler mRemoveFeatureHandler;
     private EditFeatureHandler mEditFeatureHandler;
+    private ViewFeatureAttributesHandler mViewFeaturAttributesHandler;
 
     public FeaturesAdapter(@NonNull Context context, int resource, List<MapFeature> features,
+                           ViewFeatureAttributesHandler viewFeatureHandler,
                            RemoveFeatureHandler  removeFeatureHandler, EditFeatureHandler editFeatureHandler) {
         super(context, resource, features);
         mRowResourceId = resource;
         mEditFeatureHandler = editFeatureHandler;
+        mViewFeaturAttributesHandler = viewFeatureHandler;
 
         mFeatures = features;
         AssetManager assets = context.getAssets();
@@ -52,15 +55,27 @@ public class FeaturesAdapter extends ArrayAdapter<MapFeature> {
         }
     };
 
+    TextView.OnClickListener viewFeatureAttributes = new TextView.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            MapFeature mapFeature = mFeatures.get((Integer) view.getTag());
+            mViewFeaturAttributesHandler.onViewFeatureAttributes(mapFeature.Id);
+        }
+    };
+
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         LayoutInflater inflater = ((Activity)getContext()).getLayoutInflater();
         View row = inflater.inflate(mRowResourceId, parent, false);
 
-        TextView hubName= row.findViewById(R.id.row_feature_name);
+        TextView featureName = row.findViewById(R.id.row_feature_name);
         MapFeature feature = mFeatures.get(position);
-        hubName.setText(feature.Name);
+        featureName .setText(feature.Name);
+
+        TextView viewFeature = row.findViewById(R.id.row_feature_view);
+        viewFeature.setTag(position);
+        viewFeature.setOnClickListener(viewFeatureAttributes);
 
         TextView removeDb = row.findViewById(R.id.row_feature_remove);
         removeDb.setTag(position);

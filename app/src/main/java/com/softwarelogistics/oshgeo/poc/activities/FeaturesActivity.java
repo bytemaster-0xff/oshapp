@@ -15,6 +15,7 @@ import com.softwarelogistics.oshgeo.poc.R;
 import com.softwarelogistics.oshgeo.poc.adapters.EditFeatureHandler;
 import com.softwarelogistics.oshgeo.poc.adapters.FeaturesAdapter;
 import com.softwarelogistics.oshgeo.poc.adapters.RemoveFeatureHandler;
+import com.softwarelogistics.oshgeo.poc.adapters.ViewFeatureAttributesHandler;
 import com.softwarelogistics.oshgeo.poc.models.MapFeature;
 import com.softwarelogistics.oshgeo.poc.repos.GeoDataContext;
 import com.softwarelogistics.oshgeo.poc.repos.GeoPackageDataContext;
@@ -22,7 +23,8 @@ import com.softwarelogistics.oshgeo.poc.repos.OSHDataContext;
 
 import java.util.List;
 
-public class FeaturesActivity extends AppCompatActivityBase implements RemoveFeatureHandler, EditFeatureHandler {
+public class FeaturesActivity extends AppCompatActivityBase implements RemoveFeatureHandler,
+        EditFeatureHandler, ViewFeatureAttributesHandler {
 
     public final static String FEATURE_TABLE_NAME  = "FEATURE_TABLE_NAME";
 
@@ -69,7 +71,8 @@ public class FeaturesActivity extends AppCompatActivityBase implements RemoveFea
         GeoDataContext ctx = new GeoDataContext(this);
         OSHDataContext hubsContext = ctx.getOSHDataContext(mGeoPackageName);
         mMapFeatures = hubsContext.getFeatures(mFeatureTableName);
-        mFeaturesAdapter = new FeaturesAdapter(this, R.layout.list_row_feature, mMapFeatures, this, this);
+        mFeaturesAdapter = new FeaturesAdapter(this, R.layout.list_row_feature, mMapFeatures,
+                this, this,this);
         mMapFeaturesList.setAdapter(mFeaturesAdapter);
     }
 
@@ -120,6 +123,15 @@ public class FeaturesActivity extends AppCompatActivityBase implements RemoveFea
         intent.putExtra(MainActivity.EXTRA_DB_NAME, mGeoPackageName);
         intent.putExtra(FeatureActivity.FEATURE_TABLE_NAME, mFeatureTableName);
         intent.putExtra(FeatureActivity.FEATURE_ID, featureId);
+        startActivity(intent);
+    }
+
+    @Override
+    public void onViewFeatureAttributes(long featureId) {
+        Intent intent = new Intent(this, FeatureAttributesActivity.class);
+        intent.putExtra(MainActivity.EXTRA_DB_NAME, mGeoPackageName);
+        intent.putExtra(FeatureAttributesActivity.FEATURE_TABLE_NAME, mFeatureTableName);
+        intent.putExtra(FeatureAttributesActivity.FEATURE_ID, featureId);
         startActivity(intent);
     }
 }

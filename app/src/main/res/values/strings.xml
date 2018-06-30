@@ -12,6 +12,10 @@
     <string name="title_activity_feature_tables">Feature Tables</string>
     <string name="title_activity_features">Features</string>
     <string name="title_activity_feature_detail">Feature Detail</string>
+    <string name="title_activity_feature_attributes">Feature Attributes</string>
+    <string name="title_activity_sensor_picker">Sensor Picker</string>
+    <string name="title_activity_acquire">Acquire Sensor Data</string>
+    <string name="title_activity_package_maintenance">Package Maintenance</string>
 
     <string name="title_activity_main">SOFWERX - OpenSensorHub/Geo POC</string>
     <!-- Icon to Unicode mapping https://fontawesome.com/icons?d=gallery -->

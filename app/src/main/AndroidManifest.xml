@@ -88,9 +88,14 @@
         <activity
             android:name=".activities.FeatureActivity"
             android:label="@string/title_activity_feature_detail" />
-        <activity android:name=".activities.AcquireActivity" />
-        <activity android:name=".activities.PackageMaintenanceActivity" />
-        <activity android:name=".activities.SensorPickerActivity"></activity>
+        <activity android:name=".activities.AcquireActivity"
+            android:label="@string/title_activity_acquire"/>
+        <activity android:name=".activities.PackageMaintenanceActivity"
+            android:label="@string/title_activity_package_maintenance"/>
+        <activity android:name=".activities.SensorPickerActivity"
+            android:label="@string/title_activity_sensor_picker" />
+        <activity android:name=".activities.FeatureAttributesActivity"
+            android:label="@string/title_activity_feature_attributes"></activity>
     </application>
 
 </manifest>
