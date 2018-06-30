@@ -1,11 +1,11 @@
 package com.softwarelogistics.oshgeo.poc.activities;
 
 import android.content.Intent;
-import android.media.audiofx.AudioEffect;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -14,17 +14,12 @@ import android.widget.TextView;
 import com.softwarelogistics.oshgeo.poc.R;
 import com.softwarelogistics.oshgeo.poc.adapters.SensorsAdapter;
 import com.softwarelogistics.oshgeo.poc.models.Capabilities;
-import com.softwarelogistics.oshgeo.poc.models.ObservableProperty;
 import com.softwarelogistics.oshgeo.poc.models.ObservationDescriptor;
-import com.softwarelogistics.oshgeo.poc.models.ObservationDescriptorOutput;
-import com.softwarelogistics.oshgeo.poc.models.ObservationType;
-import com.softwarelogistics.oshgeo.poc.models.Offering;
 import com.softwarelogistics.oshgeo.poc.models.OpenSensorHub;
 import com.softwarelogistics.oshgeo.poc.models.Sensor;
 import com.softwarelogistics.oshgeo.poc.models.SensorReading;
 import com.softwarelogistics.oshgeo.poc.models.SensorValue;
 import com.softwarelogistics.oshgeo.poc.repos.GeoDataContext;
-import com.softwarelogistics.oshgeo.poc.repos.GeoPackageDataContext;
 import com.softwarelogistics.oshgeo.poc.repos.OSHDataContext;
 import com.softwarelogistics.oshgeo.poc.tasks.GetSOSCapabilitiesResponseHandler;
 import com.softwarelogistics.oshgeo.poc.tasks.GetSOSCapabilitiesTask;
@@ -59,6 +54,13 @@ public class SensorsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sensors);
         mSensorsListView = findViewById(R.id.list_sensors);
+        mSensorsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Sensor sensor = mSensors.get(i);
+                showSensor(sensor.Id);
+            }
+        });
 
         mRefreshButton = findViewById(R.id.sensors_refresh_button);
         mSensorBusyMask = findViewById(R.id.sensor_progress_mask);
@@ -85,7 +87,7 @@ public class SensorsActivity extends AppCompatActivity {
         final OSHDataContext oshHubCtx = ctx.getOSHDataContext(mDatabaseName);
         mSensors = oshHubCtx.getSensors(mHub.Id);
         mSensorAdapter = new SensorsAdapter(this, mSensors, R.layout.list_row_sensor);
-        mSensorsListView.setAdapter(mSensorAdapter);;
+        mSensorsListView.setAdapter(mSensorAdapter);
         mSensorsListView.invalidate();
     }
 
@@ -120,6 +122,14 @@ public class SensorsActivity extends AppCompatActivity {
         request.Hub = mHub;
         request.DataContext = ctx.getOSHDataContext(mDatabaseName);
         task.execute(request);
+    }
+
+    private void showSensor(long sensorId){
+        Intent intent = new Intent(this, SensorObservationActivity.class);
+        intent.putExtra(MainActivity.EXTRA_DB_NAME, mDatabaseName);
+        intent.putExtra(SensorObservationActivity.HUB_ID, mHub.Id);
+        intent.putExtra(SensorObservationActivity.SENSOR_ID, sensorId);
+        startActivity(intent);
     }
 
     private void refreshFromServer() {

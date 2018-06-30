@@ -127,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showExport() {
-        Intent myIntent = new Intent(this,  PackageMaintenance.class);
+        Intent myIntent = new Intent(this,  PackageMaintenanceActivity.class);
         myIntent.putExtra(MainActivity.EXTRA_DB_NAME, mCurrentPackageName);
         this.startActivityForResult(myIntent, 100);
     }

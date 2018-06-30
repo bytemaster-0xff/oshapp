@@ -36,7 +36,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class PackageMaintenance extends AppCompatActivity {
+public class PackageMaintenanceActivity extends AppCompatActivity {
 
     private final static String TAG = "oshapp";
 

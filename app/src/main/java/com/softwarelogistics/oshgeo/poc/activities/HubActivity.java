@@ -118,10 +118,10 @@ public class HubActivity extends AppCompatActivity {
     }
 
     private void setLocation() {
-        Intent pickLocationIntent = new Intent(this, LocationPicker.class);
+        Intent pickLocationIntent = new Intent(this, LocationPickerActivity.class);
         if(mHubLocation != null){
-            pickLocationIntent.putExtra(LocationPicker.EXTRA_LOCATION_SET_LATITUDE, mHubLocation.latitude);
-            pickLocationIntent.putExtra(LocationPicker.EXTRA_LOCATION_SET_LONGITUDE, mHubLocation.longitude);
+            pickLocationIntent.putExtra(LocationPickerActivity.EXTRA_LOCATION_SET_LATITUDE, mHubLocation.latitude);
+            pickLocationIntent.putExtra(LocationPickerActivity.EXTRA_LOCATION_SET_LONGITUDE, mHubLocation.longitude);
         }
         startActivityForResult(pickLocationIntent, SELECTLOCATION_REQUESTION_ID );
     }
@@ -232,9 +232,9 @@ public class HubActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == SELECTLOCATION_REQUESTION_ID  &&
-            resultCode == LocationPicker.EXTRA_SET_LOCATION) {
-            double lat = data.getDoubleExtra(LocationPicker.EXTRA_LOCATION_SET_LATITUDE, 0);
-            double lng = data.getDoubleExtra(LocationPicker.EXTRA_LOCATION_SET_LONGITUDE, 0);
+            resultCode == LocationPickerActivity.EXTRA_SET_LOCATION) {
+            double lat = data.getDoubleExtra(LocationPickerActivity.EXTRA_LOCATION_SET_LATITUDE, 0);
+            double lng = data.getDoubleExtra(LocationPickerActivity.EXTRA_LOCATION_SET_LONGITUDE, 0);
             mHubLocation = new LatLng(lat, lng);
             mLocation.setText(String.format("%.6f x %.6f", mHubLocation.latitude, mHubLocation.longitude));
         }

@@ -408,7 +408,7 @@ public class OSHDataContext {
         SensorReading reading = new SensorReading();
         reading.Id = row.getId();
         reading.HubId = (long)row.getValue(READING_COL_HUB_ID);
-        reading.Timestamp = (java.sql.Date)row.getValue(COL_TIMESTAMP);
+        reading.Timestamp = (java.util.Date)row.getValue(COL_TIMESTAMP);
         reading.SensorId = (long)row.getValue(COL_ID);
         return reading;
     }
@@ -439,7 +439,7 @@ public class OSHDataContext {
         SensorValue sensorValue = new SensorValue();
         sensorValue.Id = (long)row.getValue(COL_ID);
         sensorValue.SensorId = (long)row.getValue(VALUE_COL_SENSOR_ID);
-        sensorValue.Timestamp = (java.sql.Date)row.getValue(COL_TIMESTAMP);
+        sensorValue.Timestamp = (java.util.Date)row.getValue(COL_TIMESTAMP);
         sensorValue.Name = row.getValue(COL_NAME).toString();
         sensorValue.Label = row.getValue(VALUE_COL_LABEL).toString();
         sensorValue.DataType = row.getValue(VALUE_COL_DATA_TYPE).toString();

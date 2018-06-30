@@ -1,7 +1,6 @@
 package com.softwarelogistics.oshgeo.poc.activities;
 
 import android.content.Intent;
-import android.location.Location;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -86,12 +85,12 @@ public class FeatureActivity extends AppCompatActivity {
         mSetLocationButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent pickLocationIntent = new Intent(FeatureActivity.this, LocationPicker.class);
+                Intent pickLocationIntent = new Intent(FeatureActivity.this, LocationPickerActivity.class);
                 if(mFeatureLocation != null){
-                    pickLocationIntent.putExtra(LocationPicker.EXTRA_LOCATION_SET_LATITUDE, mFeatureLocation.latitude);
-                    pickLocationIntent.putExtra(LocationPicker.EXTRA_LOCATION_SET_LONGITUDE, mFeatureLocation.longitude);
+                    pickLocationIntent.putExtra(LocationPickerActivity.EXTRA_LOCATION_SET_LATITUDE, mFeatureLocation.latitude);
+                    pickLocationIntent.putExtra(LocationPickerActivity.EXTRA_LOCATION_SET_LONGITUDE, mFeatureLocation.longitude);
                 }
-                
+
                 startActivityForResult(pickLocationIntent, SELECTLOCATION_REQUESTION_ID );
             }
         });
@@ -121,9 +120,9 @@ public class FeatureActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == SELECTLOCATION_REQUESTION_ID  &&
-                resultCode == LocationPicker.EXTRA_SET_LOCATION) {
-            double lat = data.getDoubleExtra(LocationPicker.EXTRA_LOCATION_SET_LATITUDE, 0);
-            double lng = data.getDoubleExtra(LocationPicker.EXTRA_LOCATION_SET_LONGITUDE, 0);
+                resultCode == LocationPickerActivity.EXTRA_SET_LOCATION) {
+            double lat = data.getDoubleExtra(LocationPickerActivity.EXTRA_LOCATION_SET_LATITUDE, 0);
+            double lng = data.getDoubleExtra(LocationPickerActivity.EXTRA_LOCATION_SET_LONGITUDE, 0);
             mFeatureLocation = new LatLng(lat, lng);
             mLocation.setText(String.format("%.6f x %.6f", mFeatureLocation.latitude, mFeatureLocation.longitude));
         }
