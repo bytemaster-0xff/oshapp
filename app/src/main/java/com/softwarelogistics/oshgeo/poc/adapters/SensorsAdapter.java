@@ -41,7 +41,12 @@ public class SensorsAdapter extends ArrayAdapter<Sensor> {
         descriptionView.setText(sensor.Description);
 
         TextView lastUpdateView = row.findViewById(R.id.row_sensor_last_update);
-        lastUpdateView.setText(sensor.LastContact.toString());
+        if(sensor.LastContact != null) {
+            lastUpdateView.setText(sensor.LastContact.toString());
+        }
+        else {
+            lastUpdateView.setText("never contacted");
+        }
 
         return row;
     }

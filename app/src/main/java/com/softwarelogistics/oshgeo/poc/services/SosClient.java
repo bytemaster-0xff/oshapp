@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
@@ -149,12 +150,25 @@ public class SosClient  {
 
             SensorValue value = new SensorValue();
             value.Name = field.Label;
+            value.Label = field.Label;
             value.StrValue = rawValue;
+            value.Units = field.UnitOfMeasure;
+            value.DataType = "string";
             String[] parts = rawValue.split(",");
             if(parts.length == 2){
-
+                //TODO:  Should probably do somthing to figure out actual datatypes, for now everything is a string.
+                value.DataType = "string";
                 value.StrValue = parts[1];
                 value.Timestamp = DateParser.parse(parts[0]);
+            }
+            else if(parts.length == 3){
+                //TODO: Hack, if we have three values assume it's time stamp, lat and lon
+                value.DataType = "latlng";
+                value.StrValue = String.format("%s,%s", parts[1], parts[2]);
+                value.Timestamp = DateParser.parse(parts[0]);
+            }
+            else {
+                value.Timestamp = new Date();
             }
 
             Log.d("log.osh","-------------------------------------------");

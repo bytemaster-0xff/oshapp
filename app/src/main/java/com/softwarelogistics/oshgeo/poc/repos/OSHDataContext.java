@@ -1,28 +1,18 @@
 package com.softwarelogistics.oshgeo.poc.repos;
 
-import android.Manifest;
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.os.Environment;
-import android.support.v4.content.ContextCompat;
-import android.widget.ListView;
-
 import com.google.android.gms.maps.model.LatLng;
-import com.softwarelogistics.oshgeo.poc.models.GeoLocation;
 import com.softwarelogistics.oshgeo.poc.models.MapFeature;
 import com.softwarelogistics.oshgeo.poc.models.OpenSensorHub;
 import com.softwarelogistics.oshgeo.poc.models.Sensor;
 import com.softwarelogistics.oshgeo.poc.models.SensorReading;
 import com.softwarelogistics.oshgeo.poc.models.SensorValue;
 
-import java.io.File;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import mil.nga.geopackage.GeoPackage;
-import mil.nga.geopackage.GeoPackageManager;
 import mil.nga.geopackage.extension.related.dublin.DublinCoreType;
 import mil.nga.geopackage.attributes.AttributesColumn;
 import mil.nga.geopackage.attributes.AttributesCursor;
@@ -35,26 +25,20 @@ import mil.nga.geopackage.core.srs.SpatialReferenceSystem;
 import mil.nga.geopackage.core.srs.SpatialReferenceSystemDao;
 import mil.nga.geopackage.db.GeoPackageDataType;
 import mil.nga.geopackage.extension.related.RelatedTablesExtension;
-import mil.nga.geopackage.factory.GeoPackageFactory;
 import mil.nga.geopackage.features.columns.GeometryColumns;
 import mil.nga.geopackage.features.columns.GeometryColumnsDao;
 import mil.nga.geopackage.features.user.FeatureColumn;
-import mil.nga.geopackage.extension.related.ExtendedRelation;
-import mil.nga.geopackage.user.UserQuery;
 import mil.nga.geopackage.user.custom.UserCustomColumn;
 import mil.nga.geopackage.extension.related.UserMappingDao;
 import mil.nga.geopackage.extension.related.UserMappingRow;
 import mil.nga.geopackage.extension.related.UserMappingTable;
 import mil.nga.geopackage.extension.related.dublin.DublinCoreMetadata;
-import mil.nga.geopackage.extension.related.dublin.DublinCoreType;
 import mil.nga.geopackage.features.user.FeatureCursor;
 import mil.nga.geopackage.features.user.FeatureDao;
 import mil.nga.geopackage.features.user.FeatureRow;
 import mil.nga.geopackage.features.user.FeatureTable;
 import mil.nga.geopackage.geom.GeoPackageGeometryData;
-import mil.nga.geopackage.map.geom.GoogleMapShapeConverter;
 import mil.nga.geopackage.user.custom.UserCustomCursor;
-import mil.nga.geopackage.user.custom.UserCustomRow;
 import mil.nga.sf.GeometryType;
 import mil.nga.sf.Point;
 import mil.nga.sf.proj.ProjectionConstants;
@@ -81,6 +65,7 @@ public class OSHDataContext {
     static final String HUB_COL_IP = "ipaddress";
     static final String HUB_COL_IMAGE = "image";
     static final String HUB_COL_PORT = "port";
+    static final String HUB_COL_LAST_CONTACT = "last_contact";
 
     public static final String SNSR_TABLE_NAME = "sensors";
     static final String SNSR_HUB_ID = "hub_id";
@@ -89,10 +74,12 @@ public class OSHDataContext {
     static final String SNSR_COL_LAST_CONTACT = "last_contact";
 
     static final String READING_TABLE_NAME = "sensor_readings";
+    static final String READING_COL_HUB_ID = "hub_id";
     static final String READING_COL_SENSOR_ID = "sensor_id";
 
     static final String VALUE_CURRENT_TABLE_NAME = "current_sensor_values";
     static final String VALUE_TABLE_NAME = "sensor_values";
+    static final String VALUE_COL_HUB_ID = "hub_id";
     static final String VALUE_COL_READING_ID = "reading_id";
     static final String VALUE_COL_SENSOR_ID = "sensor_id";
     static final String VALUE_COL_LABEL = "label";
@@ -224,6 +211,7 @@ public class OSHDataContext {
         columns.add(FeatureColumn.createColumn(idx++, HUB_COL_HUB_LOGIN_PASSWORD, GeoPackageDataType.TEXT,false, null));
         columns.add(FeatureColumn.createColumn(idx++, HUB_COL_SECURE_CONNECTION, GeoPackageDataType.BOOLEAN,true, false));
         columns.add(FeatureColumn.createColumn(idx++, HUB_COL_IP, GeoPackageDataType.TEXT,true, ""));
+        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_LAST_CONTACT, GeoPackageDataType.DATE,false, null));
         columns.add(FeatureColumn.createColumn(idx++, HUB_COL_PORT, GeoPackageDataType.INT,true, 8181));
         columns.add(FeatureColumn.createColumn(idx++, HUB_COL_IMAGE, GeoPackageDataType.BLOB,false, null));
         FeatureTable tbl = new FeatureTable(HUB_TABLE_NAME, columns);
@@ -271,8 +259,9 @@ public class OSHDataContext {
 
         int columnNumber = 0;
         columns.add(AttributesColumn.createPrimaryKeyColumn(columnNumber++, COL_ID));
+        columns.add(AttributesColumn.createColumn(columnNumber++, READING_COL_HUB_ID, GeoPackageDataType.INT, true, null));
         columns.add(AttributesColumn.createColumn(columnNumber++, READING_COL_SENSOR_ID, GeoPackageDataType.INT, true, null));
-        columns.add(AttributesColumn.createColumn(columnNumber++, COL_TIMESTAMP, GeoPackageDataType.INT, true, null));
+        columns.add(AttributesColumn.createColumn(columnNumber++, COL_TIMESTAMP, GeoPackageDataType.DATE, true, null));
         mGeoPackage.createAttributesTable(READING_TABLE_NAME, columns);
     }
 
@@ -292,8 +281,10 @@ public class OSHDataContext {
         int columnNumber = 0;
         columns.add(AttributesColumn.createPrimaryKeyColumn(columnNumber++, COL_ID));
         columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_READING_ID, GeoPackageDataType.INT, true, null));
+        columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_HUB_ID, GeoPackageDataType.INT, true, null));
         columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_SENSOR_ID, GeoPackageDataType.INT, true, null));
-        columns.add(AttributesColumn.createColumn(columnNumber++, COL_TIMESTAMP, GeoPackageDataType.INT, true, null));
+        columns.add(AttributesColumn.createColumn(columnNumber++, COL_TIMESTAMP, GeoPackageDataType.DATE, true, null));
+        columns.add(AttributesColumn.createColumn(columnNumber++, COL_NAME, GeoPackageDataType.TEXT,true, ""));
         columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_LABEL, GeoPackageDataType.TEXT, true, null));
         columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_DATA_TYPE, GeoPackageDataType.TEXT, true, null));
         columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_STR_VALUE, GeoPackageDataType.TEXT, false, null));
@@ -312,8 +303,10 @@ public class OSHDataContext {
 
         int columnNumber = 0;
         columns.add(AttributesColumn.createPrimaryKeyColumn(columnNumber++, COL_ID));
+        columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_HUB_ID, GeoPackageDataType.INT, true, null));
         columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_SENSOR_ID, GeoPackageDataType.INT, true, null));
-        columns.add(AttributesColumn.createColumn(columnNumber++, COL_TIMESTAMP, GeoPackageDataType.INT, true, null));
+        columns.add(AttributesColumn.createColumn(columnNumber++, COL_TIMESTAMP, GeoPackageDataType.DATE, true, null));
+        columns.add(AttributesColumn.createColumn(columnNumber++, COL_NAME, GeoPackageDataType.TEXT,true, ""));
         columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_LABEL, GeoPackageDataType.TEXT, true, null));
         columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_DATA_TYPE, GeoPackageDataType.TEXT, true, null));
         columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_STR_VALUE, GeoPackageDataType.TEXT, false, null));
@@ -414,14 +407,23 @@ public class OSHDataContext {
     private SensorReading readingFromAttrRow(AttributesRow row) {
         SensorReading reading = new SensorReading();
         reading.Id = row.getId();
+        reading.HubId = (long)row.getValue(READING_COL_HUB_ID);
         reading.Timestamp = (java.sql.Date)row.getValue(COL_TIMESTAMP);
         reading.SensorId = (long)row.getValue(COL_ID);
         return reading;
     }
 
+    private AttributesRow readingToAttributeRow(SensorReading reading, AttributesRow row){
+        row.setValue(READING_COL_HUB_ID, reading.HubId);
+        row.setValue(READING_COL_SENSOR_ID, reading.SensorId);
+        row.setValue(COL_TIMESTAMP, reading.Timestamp);
+        return row;
+    }
+
     private AttributesRow valueToAttrRow(SensorValue value, AttributesRow row ){
         row.setValue(VALUE_COL_DATA_TYPE, value.DataType);
         row.setValue(COL_NAME, value.Name);
+        row.setValue(VALUE_COL_HUB_ID, value.HubId);
         row.setValue(COL_TIMESTAMP, value.Timestamp);
         row.setValue(VALUE_COL_LABEL, value.Label);
         row.setValue(VALUE_COL_NUMB_VALUE, value.NumbValue);
@@ -472,6 +474,21 @@ public class OSHDataContext {
             sensorValue.Units = unitsValue.toString();
         }
 
+        if(sensorValue.DataType.equalsIgnoreCase("latlng")){
+            if(sensorValue.StrValue != null){
+                String[] parts = sensorValue.StrValue.split(",");
+                try {
+                    double lat = Double.parseDouble(parts[0]);
+                    double lng = Double.parseDouble(parts[0]);
+                    sensorValue.Location = new LatLng(lat, lng);
+                }
+                catch(NumberFormatException ex){
+
+                }
+            }
+
+        }
+
         return sensorValue;
     }
 
@@ -513,7 +530,6 @@ public class OSHDataContext {
         return row;
     }
 
-
     private OpenSensorHub hubFromFeatureRow(FeatureRow row) {
         OpenSensorHub hub = new OpenSensorHub();
         hub.Id = row.getId();
@@ -524,6 +540,11 @@ public class OSHDataContext {
         hub.Port = (long)row.getValue(HUB_COL_PORT);
 
         hub.Name = row.getValue(COL_NAME).toString();
+
+        Object lastContact = row.getValue(HUB_COL_LAST_CONTACT);
+        if(lastContact != null){
+            hub.LastContact = (Date)lastContact;
+        }
 
         Object ssid = row.getValue(HUB_COL_SSID);
         if(ssid != null){
@@ -570,6 +591,9 @@ public class OSHDataContext {
             row.setValue(HUB_COL_HUB_LOGIN_PASSWORD, hub.HubPassword);
             row.setValue(HUB_COL_IP, hub.URI);
             row.setValue(HUB_COL_PORT, hub.Port);
+            if (hub.LastContact != null) {
+                row.setValue(HUB_COL_LAST_CONTACT, hub.LastContact);
+            }
             return row;
         }
         catch(SQLException ex){
@@ -809,6 +833,9 @@ public class OSHDataContext {
 
         AttributesDao readingsDao = mGeoPackage.getAttributesDao(READING_TABLE_NAME);
         AttributesRow readingRow = readingsDao.newRow();
+        readingRow.setValue(READING_COL_HUB_ID, hub.Id);
+        readingRow.setValue(READING_COL_SENSOR_ID, sensor.Id);
+        readingRow.setValue(COL_TIMESTAMP, timestamp);
         readingsDao.create(readingRow);
 
         AttributesDao valuesDao = mGeoPackage.getAttributesDao(VALUE_TABLE_NAME);
@@ -824,7 +851,7 @@ public class OSHDataContext {
         AttributesDao currentValuesDao = mGeoPackage.getAttributesDao(VALUE_CURRENT_TABLE_NAME);
 
         /* Likely a better way of doing this, but since all parameters are either a constant or long, we are safe from SQL Injection attacks */
-        mGeoPackage.execSQL(String.format("delete from %s where %s = %i", VALUE_CURRENT_TABLE_NAME, VALUE_COL_SENSOR_ID, sensor.Id));
+        mGeoPackage.execSQL(String.format("delete from %s where %s = %d", VALUE_CURRENT_TABLE_NAME, VALUE_COL_SENSOR_ID, sensor.Id));
 
         for(SensorValue value : values) {
             AttributesRow row = currentValuesDao.newRow();
@@ -834,6 +861,14 @@ public class OSHDataContext {
         }
 
         return true;
+    }
+
+    public  SensorReading insertSensorReading(SensorReading reading){
+        AttributesDao attrDao = mGeoPackage.getAttributesDao(READING_TABLE_NAME);
+        AttributesRow newRow = attrDao.newRow();
+        attrDao.insert(readingToAttributeRow(reading, newRow));
+        reading.Id = newRow.getId();
+        return reading;
     }
 
     public List<SensorReading> getReadings(long sensorId) {

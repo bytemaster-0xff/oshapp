@@ -21,6 +21,7 @@ import com.softwarelogistics.oshgeo.poc.models.ObservationType;
 import com.softwarelogistics.oshgeo.poc.models.Offering;
 import com.softwarelogistics.oshgeo.poc.models.OpenSensorHub;
 import com.softwarelogistics.oshgeo.poc.models.Sensor;
+import com.softwarelogistics.oshgeo.poc.models.SensorReading;
 import com.softwarelogistics.oshgeo.poc.models.SensorValue;
 import com.softwarelogistics.oshgeo.poc.repos.GeoDataContext;
 import com.softwarelogistics.oshgeo.poc.repos.GeoPackageDataContext;
@@ -30,7 +31,9 @@ import com.softwarelogistics.oshgeo.poc.tasks.GetSOSCapabilitiesTask;
 import com.softwarelogistics.oshgeo.poc.tasks.GetSOSSensorValuesTask;
 import com.softwarelogistics.oshgeo.poc.tasks.GetSensorValuesResponseHandler;
 import com.softwarelogistics.oshgeo.poc.tasks.ProgressHandler;
+import com.softwarelogistics.oshgeo.poc.tasks.SensorHubUpdateRequest;
 
+import java.util.Date;
 import java.util.List;
 
 public class SensorsActivity extends AppCompatActivity {
@@ -91,6 +94,10 @@ public class SensorsActivity extends AppCompatActivity {
         task.responseHandler = new GetSensorValuesResponseHandler() {
             @Override
             public void gotSensorValues(List<SensorValue> sensorValueList) {
+                SensorReading reading = new SensorReading();
+                reading.HubId = mHub.Id;
+                reading.Timestamp = new Date();
+
                 for(SensorValue value: sensorValueList){
                     Log.d("log.osh", value.Name + " " + value.SensorId + " " + value.Units + " " + value.StrValue);
                 }
@@ -107,7 +114,12 @@ public class SensorsActivity extends AppCompatActivity {
         };
 
         mSensorBusyMask.setVisibility(View.VISIBLE);
-        task.execute(mHub);
+        SensorHubUpdateRequest request = new SensorHubUpdateRequest();
+        GeoDataContext ctx = new GeoDataContext(SensorsActivity.this);
+
+        request.Hub = mHub;
+        request.DataContext = ctx.getOSHDataContext(mDatabaseName);
+        task.execute(request);
     }
 
     private void refreshFromServer() {

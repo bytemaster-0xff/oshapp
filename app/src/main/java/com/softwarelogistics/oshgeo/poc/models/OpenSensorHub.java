@@ -4,6 +4,8 @@ import android.net.wifi.WifiConfiguration;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.util.Date;
+
 public class OpenSensorHub {
     public long Id;
     public String Name;
@@ -12,6 +14,8 @@ public class OpenSensorHub {
     public boolean SecureConnection;
     public String URI;
     public long Port;
+
+    public Date LastContact;
 
     public String HubAuthType;
     public String HubUserId;
