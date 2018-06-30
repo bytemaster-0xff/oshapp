@@ -1,9 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".activities.NavigateToHubActivity">
 
-</android.support.constraint.ConstraintLayout>
+    <TextView
+        android:textSize="64dp"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="0dp"
+        android:layout_marginLeft="5dp"
+        android:text="@string/icon_left_arrow"
+        android:textColor="@color/colorAccent"
+        android:fontFamily="@font/fa_solid_900"
+        android:id="@+id/activity_navigate_left"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:textSize="64dp"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="0dp"
+        android:text="@string/icon_right_arrow"
+        android:layout_marginRight="5dp"
+        android:textColor="@color/colorAccent"
+        android:fontFamily="@font/fa_solid_900"
+        android:id="@+id/activity_navigate_right"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="0dp"
+        android:textAlignment="center"
+        android:layout_centerHorizontal="true"
+        android:layout_width="wrap_content"
+        android:textSize="24dp"
+        android:text="Bearing to Hub"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:layout_alignParentTop="true"
+        android:id="@+id/navigate_to_hub_heading"
+        android:layout_marginTop="30dp"
+        android:textAlignment="center"
+        android:layout_centerHorizontal="true"
+        android:layout_width="wrap_content"
+        android:textSize="48dp"
+        android:text="80"
+        android:layout_height="wrap_content" />
+
+    <ImageView
+        android:id="@+id/navigate_to_hub_image"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        app:srcCompat="@drawable/compass" />
+
+    <RelativeLayout
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="20dp"
+        android:layout_marginBottom="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:textColor="#000"
+            android:text="Name"
+            android:textSize="30dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:textColor="#000"
+            android:layout_marginTop="30dp"
+            android:text="Distance"
+            android:textSize="30dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/navigate_to_hub_hub_name"
+            android:text="My Hub Name"
+            android:textSize="30dp"
+            android:layout_marginLeft="120dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_marginTop="30dp"
+            android:layout_marginLeft="120dp"
+            android:id="@+id/navigate_to_hub_distance"
+            android:text="100.0 km"
+            android:textSize="30dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:textColor="#000"
+            android:layout_marginTop="60dp"
+            android:text="Heading"
+            android:textSize="30dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_marginTop="60dp"
+            android:layout_marginLeft="120dp"
+            android:id="@+id/navigate_to_hub_current_heading"
+            android:text="33"
+            android:textSize="30dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </RelativeLayout>
+    
+</RelativeLayout>

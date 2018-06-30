@@ -16,6 +16,7 @@
     <string name="title_activity_sensor_picker">Sensor Picker</string>
     <string name="title_activity_acquire">Acquire Sensor Data</string>
     <string name="title_activity_package_maintenance">Package Maintenance</string>
+    <string name="title_activity_navigate_to_hub">Navigate to Hub</string>
 
     <string name="title_activity_main">SOFWERX - OpenSensorHub/Geo POC</string>
     <!-- Icon to Unicode mapping https://fontawesome.com/icons?d=gallery -->
@@ -32,4 +33,7 @@
     <string name="icon_add">&#xf0fe;</string>
     <string name="icon_features">&#xf1e5;</string>
     <string name="icon_acquire">&#xf2F1;</string>
+    <string name="icon_left_arrow">&#xf0a5;</string>
+    <string name="icon_right_arrow">&#xf0a4;</string>
+
 </resources>

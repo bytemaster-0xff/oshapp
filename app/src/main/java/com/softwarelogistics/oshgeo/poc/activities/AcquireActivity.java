@@ -283,7 +283,10 @@ public class AcquireActivity extends AppCompatActivity
 
     @Override
     public void onNavigateToHub(OpenSensorHub hub) {
-
+        Intent intent = new Intent(this, NavigateToHubActivity.class);
+        intent.putExtra(MainActivity.EXTRA_DB_NAME, mGeoPackageName);
+        intent.putExtra(SensorsActivity.EXTRA_HUB_ID, hub.Id);
+        startActivity(intent);
     }
 
     @Override
