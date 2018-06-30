@@ -67,10 +67,18 @@
         <activity
             android:name=".activities.HubActivity"
             android:label="@string/title_activity_osh_hub" />
-        <activity android:name=".activities.LocationPickerActivity" android:label="@string/title_activity_location_picker"  />
-        <activity android:name=".activities.SensorsActivity" android:label="@string/title_activity_sensors"  />
-        <activity android:name=".activities.SensorActivity" android:label="@string/title_activity_sensor"  />
-        <activity android:name=".activities.SensorObservationActivity" android:label="@string/title_activity_observations"  />
+        <activity
+            android:name=".activities.LocationPickerActivity"
+            android:label="@string/title_activity_location_picker" />
+        <activity
+            android:name=".activities.SensorsActivity"
+            android:label="@string/title_activity_sensors" />
+        <activity
+            android:name=".activities.SensorActivity"
+            android:label="@string/title_activity_sensor" />
+        <activity
+            android:name=".activities.SensorObservationActivity"
+            android:label="@string/title_activity_observations" />
         <activity
             android:name=".activities.FeaturesActivity"
             android:label="@string/title_activity_features" />
@@ -81,7 +89,8 @@
             android:name=".activities.FeatureActivity"
             android:label="@string/title_activity_feature_detail" />
         <activity android:name=".activities.AcquireActivity" />
-        <activity android:name=".activities.PackageMaintenanceActivity"></activity>
+        <activity android:name=".activities.PackageMaintenanceActivity" />
+        <activity android:name=".activities.SensorPickerActivity"></activity>
     </application>
 
 </manifest>

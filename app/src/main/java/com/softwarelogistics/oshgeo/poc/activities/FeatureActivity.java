@@ -6,19 +6,25 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.softwarelogistics.oshgeo.poc.R;
+import com.softwarelogistics.oshgeo.poc.adapters.FeatureRelatedSensorAdapter;
+import com.softwarelogistics.oshgeo.poc.adapters.RemoveRelatedSensorHandler;
+import com.softwarelogistics.oshgeo.poc.models.FeatureRelatedSensor;
 import com.softwarelogistics.oshgeo.poc.models.MapFeature;
 import com.softwarelogistics.oshgeo.poc.repos.GeoDataContext;
 import com.softwarelogistics.oshgeo.poc.repos.OSHDataContext;
 
-public class FeatureActivity extends AppCompatActivity {
+import java.util.List;
+
+public class FeatureActivity extends AppCompatActivity implements RemoveRelatedSensorHandler {
 
     final static int SELECTLOCATION_REQUESTION_ID = 202;
-
+    final static int ADD_RELATEDFATURE_REQUEST_ID = 203;
     public final static String FEATURE_TABLE_NAME = "FEATURE_TABLE_NAME";
     public final static String FEATURE_ID = "FEATURE_ID";
 
@@ -36,6 +42,13 @@ public class FeatureActivity extends AppCompatActivity {
     LatLng mFeatureLocation;
     TextView mLocation;
 
+    Button mAddRelatedFeatures;
+
+
+    FeatureRelatedSensorAdapter mRelatedSensorsAdapter;
+    ListView mRelatedfeaturesList;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,6 +56,8 @@ public class FeatureActivity extends AppCompatActivity {
 
         mGeoPackgeName = this.getIntent().getStringExtra(MainActivity.EXTRA_DB_NAME);
         mFeatureTableName = this.getIntent().getStringExtra(FeatureActivity.FEATURE_TABLE_NAME);
+
+        mRelatedfeaturesList = findViewById(R.id.feature_related_sensors);
 
         mLocation = findViewById(R.id.feature_location);
         mFeatureName = findViewById(R.id.feature_name);
@@ -52,6 +67,16 @@ public class FeatureActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 FeatureActivity.this.finish();
+            }
+        });
+
+        mAddRelatedFeatures = findViewById(R.id.feature_add_related_table);
+        mAddRelatedFeatures.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent pickLocationIntent = new Intent(FeatureActivity.this, SensorPickerActivity.class);
+                pickLocationIntent.putExtra(MainActivity.EXTRA_DB_NAME, mGeoPackgeName);
+                startActivityForResult(pickLocationIntent, ADD_RELATEDFATURE_REQUEST_ID );
             }
         });
 
@@ -85,24 +110,35 @@ public class FeatureActivity extends AppCompatActivity {
         mSetLocationButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent pickLocationIntent = new Intent(FeatureActivity.this, LocationPickerActivity.class);
-                if(mFeatureLocation != null){
-                    pickLocationIntent.putExtra(LocationPickerActivity.EXTRA_LOCATION_SET_LATITUDE, mFeatureLocation.latitude);
-                    pickLocationIntent.putExtra(LocationPickerActivity.EXTRA_LOCATION_SET_LONGITUDE, mFeatureLocation.longitude);
-                }
+            Intent pickLocationIntent = new Intent(FeatureActivity.this, LocationPickerActivity.class);
+            if(mFeatureLocation != null){
+                pickLocationIntent.putExtra(LocationPickerActivity.EXTRA_LOCATION_SET_LATITUDE, mFeatureLocation.latitude);
+                pickLocationIntent.putExtra(LocationPickerActivity.EXTRA_LOCATION_SET_LONGITUDE, mFeatureLocation.longitude);
+            }
 
-                startActivityForResult(pickLocationIntent, SELECTLOCATION_REQUESTION_ID );
+            startActivityForResult(pickLocationIntent, SELECTLOCATION_REQUESTION_ID );
             }
         });
 
         if(this.getIntent().hasExtra(FeatureActivity.FEATURE_ID)){
             mMapFeatureId = this.getIntent().getLongExtra(FeatureActivity.FEATURE_ID,0);
             getMapFeature(mMapFeatureId);
+            populateRelatedSensors();
         }
         else {
             mMapFeature = new MapFeature();
             mLocation.setText("not set");
         }
+    }
+
+    private void populateRelatedSensors(){
+        GeoDataContext ctx = new GeoDataContext(FeatureActivity.this);
+        OSHDataContext oshCtx = ctx.getOSHDataContext(mGeoPackgeName);
+        List<FeatureRelatedSensor> relatedSensors = oshCtx.getRelatedSensorsForFeature(mFeatureTableName, mMapFeatureId);
+
+        mRelatedSensorsAdapter = new FeatureRelatedSensorAdapter(this,
+                R.layout.list_row_feature_related_item, relatedSensors, this) ;
+        mRelatedfeaturesList.setAdapter(mRelatedSensorsAdapter);
     }
 
     private void getMapFeature(long featureId){
@@ -126,6 +162,20 @@ public class FeatureActivity extends AppCompatActivity {
             mFeatureLocation = new LatLng(lat, lng);
             mLocation.setText(String.format("%.6f x %.6f", mFeatureLocation.latitude, mFeatureLocation.longitude));
         }
+        else if(requestCode == ADD_RELATEDFATURE_REQUEST_ID &&
+                resultCode == SensorPickerActivity.SENSOR_PICKED_ID){
+
+            GeoDataContext ctx = new GeoDataContext(FeatureActivity.this);
+            OSHDataContext oshCtx = ctx.getOSHDataContext(mGeoPackgeName);
+            long sensorId = data.getLongExtra(SensorPickerActivity.EXTRA_SENSOR_ID, 0);
+            String sensorName = data.getStringExtra(SensorPickerActivity.EXTRA_SENSOR_NAME);
+            oshCtx.relateFeatureToSensor(mFeatureTableName, mMapFeatureId, sensorId, sensorName, "");
+            populateRelatedSensors();
+        }
     }
 
+    @Override
+    public void onRemoveRelatedSensor(FeatureRelatedSensor relatedSensor) {
+
+    }
 }

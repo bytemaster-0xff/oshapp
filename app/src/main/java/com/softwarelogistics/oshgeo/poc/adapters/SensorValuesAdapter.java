@@ -40,7 +40,7 @@ public class SensorValuesAdapter  extends ArrayAdapter<SensorValue> {
         txtView.setText(value.Label.toString());
 
         txtView = row.findViewById(R.id.row_sensor_value_value);
-        txtView.setText(value.StrValue.toString());
+        txtView.setText(value.StrValue.toString().trim());
 
         return row;
     }

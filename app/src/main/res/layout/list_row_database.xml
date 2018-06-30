@@ -17,6 +17,7 @@
         android:layout_alignParentRight="true"
         android:layout_gravity="center_vertical"
         android:text="@string/icon_trash"
+        android:fontFamily="@font/fa_solid_900"
         android:id="@+id/row_db_textview_remove_db"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />

@@ -1,6 +1,7 @@
 package com.softwarelogistics.oshgeo.poc.repos;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.softwarelogistics.oshgeo.poc.models.FeatureRelatedSensor;
 import com.softwarelogistics.oshgeo.poc.models.MapFeature;
 import com.softwarelogistics.oshgeo.poc.models.OpenSensorHub;
 import com.softwarelogistics.oshgeo.poc.models.Sensor;
@@ -211,7 +212,7 @@ public class OSHDataContext {
         columns.add(FeatureColumn.createColumn(idx++, HUB_COL_HUB_LOGIN_PASSWORD, GeoPackageDataType.TEXT,false, null));
         columns.add(FeatureColumn.createColumn(idx++, HUB_COL_SECURE_CONNECTION, GeoPackageDataType.BOOLEAN,true, false));
         columns.add(FeatureColumn.createColumn(idx++, HUB_COL_IP, GeoPackageDataType.TEXT,true, ""));
-        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_LAST_CONTACT, GeoPackageDataType.DATE,false, null));
+        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_LAST_CONTACT, GeoPackageDataType.DATETIME,false, null));
         columns.add(FeatureColumn.createColumn(idx++, HUB_COL_PORT, GeoPackageDataType.INT,true, 8181));
         columns.add(FeatureColumn.createColumn(idx++, HUB_COL_IMAGE, GeoPackageDataType.BLOB,false, null));
         FeatureTable tbl = new FeatureTable(HUB_TABLE_NAME, columns);
@@ -261,7 +262,7 @@ public class OSHDataContext {
         columns.add(AttributesColumn.createPrimaryKeyColumn(columnNumber++, COL_ID));
         columns.add(AttributesColumn.createColumn(columnNumber++, READING_COL_HUB_ID, GeoPackageDataType.INT, true, null));
         columns.add(AttributesColumn.createColumn(columnNumber++, READING_COL_SENSOR_ID, GeoPackageDataType.INT, true, null));
-        columns.add(AttributesColumn.createColumn(columnNumber++, COL_TIMESTAMP, GeoPackageDataType.DATE, true, null));
+        columns.add(AttributesColumn.createColumn(columnNumber++, COL_TIMESTAMP, GeoPackageDataType.DATETIME, true, null));
         mGeoPackage.createAttributesTable(READING_TABLE_NAME, columns);
     }
 
@@ -283,7 +284,7 @@ public class OSHDataContext {
         columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_READING_ID, GeoPackageDataType.INT, true, null));
         columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_HUB_ID, GeoPackageDataType.INT, true, null));
         columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_SENSOR_ID, GeoPackageDataType.INT, true, null));
-        columns.add(AttributesColumn.createColumn(columnNumber++, COL_TIMESTAMP, GeoPackageDataType.DATE, true, null));
+        columns.add(AttributesColumn.createColumn(columnNumber++, COL_TIMESTAMP, GeoPackageDataType.DATETIME, true, null));
         columns.add(AttributesColumn.createColumn(columnNumber++, COL_NAME, GeoPackageDataType.TEXT,true, ""));
         columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_LABEL, GeoPackageDataType.TEXT, true, null));
         columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_DATA_TYPE, GeoPackageDataType.TEXT, true, null));
@@ -305,7 +306,7 @@ public class OSHDataContext {
         columns.add(AttributesColumn.createPrimaryKeyColumn(columnNumber++, COL_ID));
         columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_HUB_ID, GeoPackageDataType.INT, true, null));
         columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_SENSOR_ID, GeoPackageDataType.INT, true, null));
-        columns.add(AttributesColumn.createColumn(columnNumber++, COL_TIMESTAMP, GeoPackageDataType.DATE, true, null));
+        columns.add(AttributesColumn.createColumn(columnNumber++, COL_TIMESTAMP, GeoPackageDataType.DATETIME, true, null));
         columns.add(AttributesColumn.createColumn(columnNumber++, COL_NAME, GeoPackageDataType.TEXT,true, ""));
         columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_LABEL, GeoPackageDataType.TEXT, true, null));
         columns.add(AttributesColumn.createColumn(columnNumber++, VALUE_COL_DATA_TYPE, GeoPackageDataType.TEXT, true, null));
@@ -444,9 +445,11 @@ public class OSHDataContext {
         sensorValue.Label = row.getValue(VALUE_COL_LABEL).toString();
         sensorValue.DataType = row.getValue(VALUE_COL_DATA_TYPE).toString();
 
-        Object readingValue = row.getValue(VALUE_COL_READING_ID);
-        if(readingValue != null){
-            sensorValue.ReadingId = (long)readingValue;
+        if(row.hasColumn(VALUE_COL_READING_ID)){
+            Object readingValue = row.getValue(VALUE_COL_READING_ID);
+            if (readingValue != null) {
+                sensorValue.ReadingId = (long) readingValue;
+            }
         }
 
         Object dateValue = row.getValue(VALUE_COL_DATE_VALUE);
@@ -787,6 +790,22 @@ public class OSHDataContext {
         return sensors;
     }
 
+    public List<Sensor> getAllSensors() {
+        List<Sensor> sensors = new ArrayList<>();
+        FeatureDao sensorsDao = mGeoPackage.getFeatureDao(SNSR_TABLE_NAME);
+        FeatureCursor sensorsCursor = sensorsDao.queryForAll();
+        try{
+            while(sensorsCursor.moveToNext()){
+                sensors.add(sensorFromFeatureRow(sensorsCursor.getRow()));
+            }
+        }
+        finally {
+            sensorsCursor.close();
+        }
+
+        return sensors;
+    }
+
     public Sensor findSensor(long hubId, String uniqueSensorId) {
         FeatureDao sensorsDao = mGeoPackage.getFeatureDao(SNSR_TABLE_NAME);
         FeatureCursor cursor = sensorsDao.queryForEq(SNSR_COL_SNSR_UNIQUE_ID, uniqueSensorId);
@@ -842,7 +861,6 @@ public class OSHDataContext {
 
         for(SensorValue value : values) {
             AttributesRow row = valuesDao.newRow();
-            row.setValue(COL_TIMESTAMP, timestamp);
             row.setValue(VALUE_COL_SENSOR_ID, sensor.Id);
             row.setValue(VALUE_COL_READING_ID, readingRow.getId());
             valuesDao.create(valueToAttrRow(value, row));
@@ -850,8 +868,10 @@ public class OSHDataContext {
 
         AttributesDao currentValuesDao = mGeoPackage.getAttributesDao(VALUE_CURRENT_TABLE_NAME);
 
-        /* Likely a better way of doing this, but since all parameters are either a constant or long, we are safe from SQL Injection attacks */
-        mGeoPackage.execSQL(String.format("delete from %s where %s = %d", VALUE_CURRENT_TABLE_NAME, VALUE_COL_SENSOR_ID, sensor.Id));
+        String query = String.format("delete from %s where %s = %d", VALUE_CURRENT_TABLE_NAME, VALUE_COL_SENSOR_ID, sensor.Id);
+
+        //TODO: Should probably be a parameterized query, but since all parameters are either a constant or long, we are safe from SQL Injection attacks */
+        mGeoPackage.execSQL(query);
 
         for(SensorValue value : values) {
             AttributesRow row = currentValuesDao.newRow();
@@ -909,7 +929,7 @@ public class OSHDataContext {
     public List<SensorValue> getSensorCurrentValues(long sensorId) {
         List<SensorValue> currentValues = new ArrayList<>();
 
-        AttributesDao attrDao = mGeoPackage.getAttributesDao(VALUE_TABLE_NAME);
+        AttributesDao attrDao = mGeoPackage.getAttributesDao(VALUE_CURRENT_TABLE_NAME);
         AttributesCursor attrCursor = attrDao.queryForEq(VALUE_COL_SENSOR_ID, sensorId);
         try {
             while (attrCursor.moveToNext()) {
@@ -980,6 +1000,26 @@ public class OSHDataContext {
         row.setBaseId(featureId);
         row.setRelatedId(sensorId);
         mappingDao.insert(row);
+    }
+
+    public List<FeatureRelatedSensor> getRelatedSensorsForFeature(String featureTableName, long baseFeatureId){
+        List<FeatureRelatedSensor> relatedSensors = new ArrayList<>();
+
+        RelatedTablesExtension relatedTables = new RelatedTablesExtension(mGeoPackage);
+        UserMappingDao mappingDao = relatedTables.getMappingDao(getRelatedSensorTableName(featureTableName));
+        UserCustomCursor cursor = mappingDao.queryByBaseId(baseFeatureId);
+        while(cursor.moveToNext()){
+            UserMappingRow row = mappingDao.getRow(cursor.getRow());
+            FeatureRelatedSensor snsr = new FeatureRelatedSensor();
+            snsr.Id = row.getBaseId();
+            snsr.FeatureId = row.getBaseId();
+            snsr.SensorId = row.getRelatedId();
+            snsr.Name = row.getValue(DublinCoreType.TITLE.getName()).toString();
+            snsr.Description = row.getValue(DublinCoreType.DESCRIPTION.getName()).toString();
+            relatedSensors.add(snsr);
+        }
+
+        return relatedSensors;
     }
 
     public List<SensorValue> getRelatedSensorValuesForFeature(String baseFeatureTableName, long baseFeatureId){

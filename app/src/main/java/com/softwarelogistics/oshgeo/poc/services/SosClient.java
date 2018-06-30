@@ -161,7 +161,7 @@ public class SosClient  {
                 value.StrValue = parts[1];
                 value.Timestamp = DateParser.parse(parts[0]);
             }
-            else if(parts.length == 3){
+            else if(parts.length == 4){
                 //TODO: Hack, if we have three values assume it's time stamp, lat and lon
                 value.DataType = "latlng";
                 value.StrValue = String.format("%s,%s", parts[1], parts[2]);

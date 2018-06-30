@@ -74,10 +74,33 @@
                 android:text="Cancel" />
         </LinearLayout>
     </LinearLayout>
-    <ListView
-        android:layout_height="0dp"
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="wrap_content"
         app:layout_constraintTop_toBottomOf="@+id/feature_info"
-        android:id="@+id/features_related"
+        android:layout_height="0dp">
+        <RelativeLayout
+            android:padding="15dp"
+            android:id="@+id/related_sensors_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:text="Related Sensors"
+                android:textSize="24dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <Button
+                android:layout_alignParentRight="true"
+                android:text="@string/icon_add"
+                android:fontFamily="@font/fa_solid_900"
+                android:id="@+id/feature_add_related_table"
+                android:layout_width="48dp"
+                android:layout_height="48dp" />
+        </RelativeLayout>
+    <ListView
+        app:layout_constraintTop_toBottomOf="@+id/related_sensors_header"
+        android:layout_height="0dp"
+        android:id="@+id/feature_related_sensors"
         android:layout_width="match_parent"/>
+    </android.support.constraint.ConstraintLayout>
 
 </android.support.constraint.ConstraintLayout>

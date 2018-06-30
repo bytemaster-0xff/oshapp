@@ -43,7 +43,7 @@ public class GetSOSSensorValuesTask extends AsyncTask<SensorHubUpdateRequest, St
                 capabilities.Descriptors.add(descriptor);
 
                 Sensor sensor = ctx.findSensor(hub.Id, descriptor.Id);
-
+                List<SensorValue> sensorValues = new ArrayList<>();
 
                 for(ObservationDescriptorOutput output : descriptor.Outputs) {
                     for(ObservationDescriptorDataField field : output.Fields) {
@@ -54,6 +54,7 @@ public class GetSOSSensorValuesTask extends AsyncTask<SensorHubUpdateRequest, St
                                 value.SensorId = sensor.Id;
                                 value.HubId = hub.Id;
                                 values.add(value);
+                                sensorValues.add(value);
                             }
                         }
                     }
@@ -68,12 +69,13 @@ public class GetSOSSensorValuesTask extends AsyncTask<SensorHubUpdateRequest, St
                                 value.SensorId = sensor.Id;
                                 value.HubId = hub.Id;
                                 values.add(value);
+                                sensorValues.add(value);
                             }
                         }
                     }
                 }
 
-                ctx.addReadings(hub, sensor, values);
+                ctx.addReadings(hub, sensor, sensorValues);
             }
         }
 

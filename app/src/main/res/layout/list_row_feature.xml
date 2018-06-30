@@ -16,6 +16,17 @@
         android:textSize="28dp"
         android:layout_alignParentRight="true"
         android:layout_gravity="center_vertical"
+        android:text="@string/icon_view"
+        android:layout_marginRight="100dp"
+        android:fontFamily="@font/fa_solid_900"
+        android:id="@+id/row_feature_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:textSize="28dp"
+        android:layout_alignParentRight="true"
+        android:layout_gravity="center_vertical"
         android:text="@string/icon_edit"
         android:layout_marginRight="50dp"
         android:fontFamily="@font/fa_solid_900"
