@@ -116,7 +116,9 @@
                 android:resource="@xml/provider_paths" />
         </provider>
 
-        <activity android:name=".activities.MapFeaturesActivity"></activity>
+        <activity android:name=".activities.MapFeaturesActivity"
+           android:label="@string/title_activity_map_features"
+            ></activity>
     </application>
 
 </manifest>

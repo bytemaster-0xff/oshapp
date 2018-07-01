@@ -17,8 +17,9 @@
     <string name="title_activity_acquire">Acquire Sensor Data</string>
     <string name="title_activity_package_maintenance">Package Maintenance</string>
     <string name="title_activity_navigate_to_hub">Navigate to Hub</string>
+    <string name="title_activity_map_features">Features</string>
 
-    <string name="title_activity_main">SOFWERX - OpenSensorHub/Geo POC</string>
+    <string name="title_activity_main">TEAMWERX - OSH POC</string>
     <!-- Icon to Unicode mapping https://fontawesome.com/icons?d=gallery -->
     <string name="icon_folder">&#xf07C;</string>
     <string name="icon_trash">&#xf2ed;</string>

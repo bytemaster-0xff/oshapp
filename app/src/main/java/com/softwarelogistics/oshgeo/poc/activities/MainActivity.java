@@ -105,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
         //  mContentsListView = findViewById(R.id.main_list_contents);
 
         mCurrentDBName = findViewById(R.id.textview_current_dbname);
-        mCurrentDBName.setText("-none-");
+        mCurrentDBName.setText("please open or create a package");
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
             ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -216,7 +216,7 @@ public class MainActivity extends AppCompatActivity {
                 mShowAquire.setVisibility(View.GONE);
                 mExport.setVisibility(View.GONE);
                 mCurrentPackageName = null;
-                mCurrentDBName.setText("-none-");
+                mCurrentDBName.setText("please open or create a package");
             }
         }
     }
