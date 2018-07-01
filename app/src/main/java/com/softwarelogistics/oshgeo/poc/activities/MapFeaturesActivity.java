@@ -1,6 +1,7 @@
 package com.softwarelogistics.oshgeo.poc.activities;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.support.v4.app.ActivityCompat;
@@ -17,11 +18,13 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.softwarelogistics.oshgeo.poc.R;
 import com.softwarelogistics.oshgeo.poc.adapters.MapFeatureAdapter;
 import com.softwarelogistics.oshgeo.poc.adapters.MapFeatureHandler;
 import com.softwarelogistics.oshgeo.poc.models.MapFeature;
+import com.softwarelogistics.oshgeo.poc.models.OpenSensorHub;
 import com.softwarelogistics.oshgeo.poc.repos.GeoDataContext;
 import com.softwarelogistics.oshgeo.poc.repos.OSHDataContext;
 
@@ -37,7 +40,6 @@ public class MapFeaturesActivity extends AppCompatActivity
     private FusedLocationProviderClient mLocationClient;
     private ListView mFeaturesList;
     private SupportMapFragment mMapFragment;
-    private LatLng mCurrentLocation;
     private GoogleMap mMap;
     private List<Marker> mHubMarkers;
     private List<MapFeature> mFeatures;
@@ -63,22 +65,15 @@ public class MapFeaturesActivity extends AppCompatActivity
         List<String> featureTables = hubsContext.getFeatureTables();
         for(String featureTable : featureTables){
             List<MapFeature> features = hubsContext.getFeatures(featureTable);
-            mFeatures.addAll(features);
+            for(MapFeature feature : features){
+                feature.TableName = featureTable;
+                mFeatures.add(feature);
+            }
         }
 
         mMapFeatureAdapter = new MapFeatureAdapter(this, R.layout.list_row_map_feature, mFeatures, this);
         mFeaturesList.setAdapter(mMapFeatureAdapter);
-
     }
-
-    GoogleMap.OnMapClickListener mapClickListener = new GoogleMap.OnMapClickListener() {
-        @Override
-        public void onMapClick(LatLng latLng) {
-        mCurrentLocation = latLng;
-        mCurrentLocation = latLng;
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
-        }
-    };
 
 
     @Override
@@ -96,21 +91,29 @@ public class MapFeaturesActivity extends AppCompatActivity
             @Override
             public void onSuccess(Location location) {
                 LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-                mCurrentLocation = latLng;
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13));
             }
         });
 
-        mMap.setOnMapClickListener(mapClickListener);
+        for (MapFeature feature : mFeatures) {
+            MarkerOptions newMarkerOptions = new MarkerOptions().position(feature.Location);
+            newMarkerOptions.title(feature.Name);
+            Marker newMarker = mMap.addMarker(newMarkerOptions);
+            mHubMarkers.add(newMarker);
+        }
     }
 
     @Override
     public void showMapFeature(MapFeature feature) {
-
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(feature.Location, 13));
     }
 
     @Override
     public void showMapFeatureDetails(MapFeature feature) {
-
+        Intent intent = new Intent(this, FeatureAttributesActivity.class);
+        intent.putExtra(MainActivity.EXTRA_DB_NAME, mGeoPackageName);
+        intent.putExtra(FeatureAttributesActivity.FEATURE_TABLE_NAME, feature.TableName);
+        intent.putExtra(FeatureAttributesActivity.FEATURE_ID, feature.Id);
+        startActivity(intent);
     }
 }

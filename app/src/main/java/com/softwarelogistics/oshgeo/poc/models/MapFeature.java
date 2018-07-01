@@ -12,4 +12,7 @@ public class MapFeature {
     public String Name;
     public String Description;
     public LatLng Location;
+
+    //This value isn't stored, but we may need it to find the feature later.
+    public String TableName;
 }
