@@ -1,19 +1,26 @@
 
 # Open Sensor Hub - Android Proof of Concept
 
-
 Open Sensor Hub Android Proof of Concept developed by [Software Logistics, LLC](https://www.software-logistics.com)
 
-Created for TEAMWERX Mobile Data Challenge
+Created for [TEAMWERX Mobile Data Challenge](https://www.teamwerx.org/mobile)
 
-The following videos give an overview of how the application works
+### Initial Release Notes
+* Application is fairly complete
+* Application still needs considerable QA
+* There are a number of areas where the user interface could use some tuning
+* This version does not include importing and exporting Geopackages
+* Application was tested with default [Simulated GPS Sensor] and [Simulated Weather Sensor] as well as custom arduino sensor
+* Application will connect and pull data from the [Sensia Soft OSH Server](http://sensiasoft.net:8181/demo.html) however the server doesn't seem to handle getting the latest data properly.  I've contacted developer
+* Compass/Navigation to OSH Hub view needs a little more tuning
 
-
+### Application Videos
 [Application Overview](https://www.youtube.com/watch?v=xEC-0g7DYxo)
 This video will demonstrate the core feature of using the application after hubs and features have been added.
 
 [Offline Features](https://www.youtube.com/watch?v=BhRo8GbL5HU)
 This video will demonstrate how the application can be used to connect to local data sources with preconfigured and stored WiFi settings.
+
 When you add your hub, you can specify "Local Wifi" if you do, it will allow you to specify a SSID and Password for the hub.  When you use the acquire feature you can connect to the hub by clicking the WiFi symbol.  If Local WiFi is selected you won't be able to synchronize with the hub unless you are connected to a matching SSID.
 
 [Configuration](https://www.youtube.com/watch?v=1bTbUfA2L-M)
@@ -24,7 +31,7 @@ This video demonstrates how to configure the key components of the application
 4. Add Features - Add a feature by name and select a location
 5. Associate sensors with a feature.
 
-Table Structure
+## Table Structure
 ### Hub Table - Open Sensor Hub Connection Data
 ```
 Table Name: [oshhubs]
