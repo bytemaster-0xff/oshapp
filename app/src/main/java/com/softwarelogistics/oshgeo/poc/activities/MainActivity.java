@@ -3,17 +3,29 @@ package com.softwarelogistics.oshgeo.poc.activities;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Environment;
+import android.os.StrictMode;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.softwarelogistics.oshgeo.poc.R;
 import com.softwarelogistics.oshgeo.poc.repos.GeoDataContext;
 import com.softwarelogistics.oshgeo.poc.repos.GeoPackageDataContext;
+
+import java.io.File;
+
+import mil.nga.geopackage.GeoPackageManager;
+import mil.nga.geopackage.factory.GeoPackageFactory;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -81,7 +93,6 @@ public class MainActivity extends AppCompatActivity {
         });
         mShowFeatures.setVisibility(View.INVISIBLE);
 
-
         mShowAquire = findViewById(R.id.main_acquire_menu);
         mShowAquire.setOnClickListener(new Button.OnClickListener() {
             @Override
@@ -127,9 +138,39 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showExport() {
-        Intent myIntent = new Intent(this,  PackageMaintenanceActivity.class);
-        myIntent.putExtra(MainActivity.EXTRA_DB_NAME, mCurrentPackageName);
-        this.startActivityForResult(myIntent, 100);
+
+
+        String packageFileName = String.format("%s.gpkg", mCurrentPackageName);
+
+        GeoPackageManager manager = GeoPackageFactory.getManager(this);
+
+        File exportDirectory =  Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+        if (!exportDirectory.exists()) {
+            exportDirectory.mkdir();
+        }
+
+        File exportedFile = new File(exportDirectory, packageFileName);
+        if (exportedFile.exists()) {
+            exportedFile.delete();
+        }
+
+        manager.exportGeoPackage(mCurrentPackageName, exportDirectory);
+
+
+/*        StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+        StrictMode.setVmPolicy(builder.build());
+
+        Uri path = Uri.fromFile(exportedFile);
+
+        //Uri path = FileProvider.getUriForFile(this, this.getApplicationContext().getPackageName() + ".my.package.name.provider", exportedFile);
+
+        Intent emailIntent = new Intent(Intent.ACTION_SEND);
+        emailIntent .setType("vnd.android.cursor.dir/email");
+        String to[] = {"asd@gmail.com"};
+        emailIntent .putExtra(Intent.EXTRA_EMAIL, to);
+        emailIntent .putExtra(Intent.EXTRA_STREAM, path);
+        emailIntent .putExtra(Intent.EXTRA_SUBJECT, "Exported Geo Package");
+        startActivity(Intent.createChooser(emailIntent , "Send email..."));*/
     }
 
     private void showAquire() {
@@ -145,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showMaps() {
-        Intent myIntent = new Intent(this, MapsActivity.class);
+        Intent myIntent = new Intent(this, MapFeaturesActivity.class);
         myIntent.putExtra(MainActivity.EXTRA_DB_NAME, mCurrentPackageName);
         this.startActivityForResult(myIntent, 100);
     }
@@ -188,9 +229,12 @@ public class MainActivity extends AppCompatActivity {
             mShowMap.setVisibility(View.VISIBLE);
             mShowFeatures.setVisibility(View.VISIBLE);
             mShowAquire.setVisibility(View.VISIBLE);
-            mExport.setVisibility(View.VISIBLE);
+
             mCurrentPackageName = data.getStringExtra(MainActivity.EXTRA_DB_NAME);
             mCurrentDBName.setText(data.getStringExtra(MainActivity.EXTRA_DB_NAME));
+
+            //TODO: Should not be that difficult to export a file!
+            mExport.setVisibility(View.GONE);
 
             GeoDataContext ctx = new GeoDataContext(this);
             GeoPackageDataContext pkgCtx = ctx.getPackage(mCurrentPackageName);

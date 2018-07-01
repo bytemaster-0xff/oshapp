@@ -89,6 +89,10 @@ public class PackageMaintenanceActivity extends AppCompatActivity {
         startActivityForResult(intent, READ_REQUEST_CODE);
     }
 
+    private void importFile() {
+
+    }
+
     /**
      * Start sign in activity.
      */

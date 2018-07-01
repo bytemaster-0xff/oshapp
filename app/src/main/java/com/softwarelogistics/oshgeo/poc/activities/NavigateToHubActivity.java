@@ -157,6 +157,10 @@ public class NavigateToHubActivity extends AppCompatActivity
         });
     }
 
+    private int normalizeAngle(int angle){
+        return (angle > 180) ? 360 - angle : angle;
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -206,7 +210,7 @@ public class NavigateToHubActivity extends AppCompatActivity
 
         Log.d("osh.log", String.format("%d - %d - %d", (int)delta, (int)mBearingToHub, (int)degree));
 
-        if(mBearingToHub > 180){
+        if(normalizeAngle((int)mBearingToHub) > normalizeAngle((int)degree)){
             mRightArrow.setVisibility(View.VISIBLE);
             mLeftArrow.setVisibility(View.GONE);
         }
