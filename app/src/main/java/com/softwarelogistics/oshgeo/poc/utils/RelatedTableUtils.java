@@ -3,8 +3,6 @@ package com.softwarelogistics.oshgeo.poc.utils;
 
 import android.content.Context;
 
-import junit.framework.TestCase;
-
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,11 +18,9 @@ import java.util.UUID;
 import mil.nga.geopackage.GeoPackageException;
 import mil.nga.geopackage.db.DateConverter;
 import mil.nga.geopackage.db.GeoPackageDataType;
-import mil.nga.geopackage.extension.related.dublin.DublinCoreMetadata;
 import mil.nga.geopackage.extension.related.dublin.DublinCoreType;
 import mil.nga.geopackage.extension.related.simple.SimpleAttributesTable;
 import mil.nga.geopackage.io.ContextIOUtils;
-import mil.nga.geopackage.user.UserCoreResultUtils;
 import mil.nga.geopackage.user.custom.UserCustomColumn;
 import mil.nga.geopackage.user.custom.UserCustomRow;
 import mil.nga.geopackage.user.custom.UserCustomTable;
@@ -227,156 +223,4 @@ public class RelatedTableUtils {
             }
         }
     }
-
-    public static void validateFloatValue(Object value,
-                                          GeoPackageDataType dataType) {
-
-        switch (dataType) {
-
-            case FLOAT:
-                TestCase.assertTrue(value instanceof Float);
-                break;
-            case DOUBLE:
-            case REAL:
-                TestCase.assertTrue(value instanceof Double);
-                break;
-            default:
-                throw new GeoPackageException("Data Type " + dataType
-                        + " is not a float type");
-        }
-    }
-
-    public static void validateIntegerValue(Object value,
-                                            GeoPackageDataType dataType) {
-
-        switch (dataType) {
-
-            case BOOLEAN:
-                TestCase.assertTrue(value instanceof Boolean);
-                break;
-            case TINYINT:
-                TestCase.assertTrue(value instanceof Byte);
-                break;
-            case SMALLINT:
-                TestCase.assertTrue(value instanceof Short);
-                break;
-            case MEDIUMINT:
-                TestCase.assertTrue(value instanceof Integer);
-                break;
-            case INT:
-            case INTEGER:
-                TestCase.assertTrue(value instanceof Long);
-                break;
-            default:
-                throw new GeoPackageException("Data Type " + dataType
-                        + " is not an integer type");
-        }
-    }
-
-    /**
-     * Validate a user row
-     *
-     * @param columns array of columns
-     * @param userRow user custom row
-     */
-    public static void validateUserRow(String[] columns, UserCustomRow userRow) {
-
-        TestCase.assertEquals(columns.length, userRow.columnCount());
-
-        for (int i = 0; i < userRow.columnCount(); i++) {
-            UserCustomColumn column = userRow.getTable().getColumns().get(i);
-            GeoPackageDataType dataType = column.getDataType();
-            TestCase.assertEquals(i, column.getIndex());
-            TestCase.assertEquals(columns[i], userRow.getColumnName(i));
-            TestCase.assertEquals(i, userRow.getColumnIndex(columns[i]));
-            int rowType = userRow.getRowColumnType(i);
-            Object value = userRow.getValue(i);
-
-            switch (rowType) {
-
-                case UserCoreResultUtils.FIELD_TYPE_INTEGER:
-                    validateIntegerValue(value, column.getDataType());
-                    break;
-
-                case UserCoreResultUtils.FIELD_TYPE_FLOAT:
-                    validateFloatValue(value, column.getDataType());
-                    break;
-
-                case UserCoreResultUtils.FIELD_TYPE_STRING:
-                    if (dataType == GeoPackageDataType.DATE
-                            || dataType == GeoPackageDataType.DATETIME) {
-                        TestCase.assertTrue(value instanceof Date);
-                        Date date = (Date) value;
-                        DateConverter converter = DateConverter.converter(dataType);
-                        String dateString = converter.stringValue(date);
-                        TestCase.assertEquals(date.getTime(),
-                                converter.dateValue(dateString).getTime());
-                    } else {
-                        TestCase.assertTrue(value instanceof String);
-                    }
-                    break;
-
-                case UserCoreResultUtils.FIELD_TYPE_BLOB:
-                    TestCase.assertTrue(value instanceof byte[]);
-                    break;
-
-                case UserCoreResultUtils.FIELD_TYPE_NULL:
-                    TestCase.assertNull(value);
-                    break;
-
-            }
-        }
-
-    }
-
-    /**
-     * Validate a user row for expected Dublin Core Columns
-     *
-     * @param userRow user custom row
-     */
-    public static void validateDublinCoreColumns(UserCustomRow userRow) {
-
-        validateDublinCoreColumn(userRow, DublinCoreType.DATE);
-        validateSimpleDublinCoreColumns(userRow);
-
-    }
-
-    /**
-     * Validate a user row for expected simple Dublin Core Columns
-     *
-     * @param userRow user custom row
-     */
-    public static void validateSimpleDublinCoreColumns(UserCustomRow userRow) {
-
-        validateDublinCoreColumn(userRow, DublinCoreType.DESCRIPTION);
-        validateDublinCoreColumn(userRow, DublinCoreType.SOURCE);
-        validateDublinCoreColumn(userRow, DublinCoreType.TITLE);
-
-    }
-
-    /**
-     * Validate a user row for expected Dublin Core Column
-     *
-     * @param userRow user custom row
-     * @param type    Dublin Core Type
-     */
-    public static void validateDublinCoreColumn(UserCustomRow userRow,
-                                                DublinCoreType type) {
-
-        UserCustomTable customTable = userRow.getTable();
-
-        TestCase.assertTrue(DublinCoreMetadata.hasColumn(userRow.getTable(),
-                type));
-        TestCase.assertTrue(DublinCoreMetadata.hasColumn(userRow, type));
-        UserCustomColumn column1 = DublinCoreMetadata.getColumn(customTable,
-                type);
-        UserCustomColumn column2 = DublinCoreMetadata.getColumn(userRow, type);
-        TestCase.assertNotNull(column1);
-        TestCase.assertNotNull(column2);
-        TestCase.assertEquals(column1, column2);
-        Object value = DublinCoreMetadata.getValue(userRow, type);
-        TestCase.assertNotNull(value);
-
-    }
-
 }

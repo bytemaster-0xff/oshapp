@@ -19,6 +19,9 @@
     <string name="title_activity_navigate_to_hub">Navigate to Hub</string>
     <string name="title_activity_map_features">Features</string>
 
+    <string name="main_menu_import_geopackage">Import Geo Package</string>
+    <string name="main_menu_export_geopackage">Export Geo Package</string>
+
     <string name="title_activity_main">TEAMWERX - OSH POC</string>
     <!-- Icon to Unicode mapping https://fontawesome.com/icons?d=gallery -->
     <string name="icon_folder">&#xf07C;</string>

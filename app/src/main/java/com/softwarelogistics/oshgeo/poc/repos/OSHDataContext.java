@@ -116,6 +116,10 @@ public class OSHDataContext {
         return hubs;
     }
 
+    public GeoPackage getPackage() {
+        return mGeoPackage;
+    }
+
     public boolean createTables(LatLng northWest, LatLng southEast) {
         try {
             mGeoPackage.createGeometryColumnsTable();

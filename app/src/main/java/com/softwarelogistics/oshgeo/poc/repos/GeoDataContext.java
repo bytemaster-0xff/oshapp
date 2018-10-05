@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.io.File;
 import java.util.List;
 
 import mil.nga.geopackage.GeoPackage;
@@ -47,5 +48,10 @@ public class GeoDataContext {
     public OSHDataContext getOSHDataContext(String packageName) {
         GeoPackage pkg = mGeoPackageManager.open(packageName);
         return new OSHDataContext(pkg, packageName);
+    }
+
+
+    public boolean importPackage(File file) {
+        return mGeoPackageManager.importGeoPackage(file);
     }
 }
