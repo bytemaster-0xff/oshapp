@@ -45,7 +45,7 @@
         <!-- This is used when gradle bitches about conflict merging support libraries -->
         <meta-data
             android:name="android.support.VERSION"
-            android:value="26.0.2"
+            android:value="28.0.0"
             tools:replace="android:value" />
 
         <activity
@@ -93,9 +93,6 @@
         <activity
             android:name=".activities.AcquireActivity"
             android:label="@string/title_activity_acquire" />
-        <activity
-            android:name=".activities.PackageMaintenanceActivity"
-            android:label="@string/title_activity_package_maintenance" />
         <activity
             android:name=".activities.SensorPickerActivity"
             android:label="@string/title_activity_sensor_picker" />

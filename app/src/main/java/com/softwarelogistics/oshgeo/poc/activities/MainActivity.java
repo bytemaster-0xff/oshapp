@@ -134,11 +134,11 @@ public class MainActivity extends AppCompatActivity {
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            hasLocationPermissions = false;
+            hasFilePermissions = false;
             requestFilePermissions();
         }
         else {
-            hasLocationPermissions = true;
+            hasFilePermissions = true;
         }
     }
 

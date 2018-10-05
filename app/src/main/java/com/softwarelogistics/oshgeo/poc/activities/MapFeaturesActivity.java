@@ -21,8 +21,10 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.Projection;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Tile;
 import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.google.android.gms.maps.model.TileProvider;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -73,6 +75,7 @@ import mil.nga.geopackage.tiles.user.TileRow;
 import mil.nga.sf.Geometry;
 import mil.nga.sf.proj.ProjectionConstants;
 import mil.nga.sf.proj.ProjectionFactory;
+import mil.nga.sf.proj.ProjectionTransform;
 
 public class MapFeaturesActivity extends AppCompatActivity
         implements OnMapReadyCallback, MapFeatureHandler {
@@ -103,7 +106,6 @@ public class MapFeaturesActivity extends AppCompatActivity
 
         mFeatures = new ArrayList<>();
 
-
         /*
         GeoDataContext ctx = new GeoDataContext(this);
         OSHDataContext hubsContext = ctx.getOSHDataContext(mGeoPackageName);
@@ -121,12 +123,15 @@ public class MapFeaturesActivity extends AppCompatActivity
         */
     }
 
+    OSHDataContext mHubsContext;
+    GeoPackage mGeoPackage;
+
     protected  void loadBaseMap(){
         GeoDataContext ctx = new GeoDataContext(this);
-        OSHDataContext hubsContext = ctx.getOSHDataContext(mGeoPackageName);
+        mHubsContext = ctx.getOSHDataContext(mGeoPackageName);
 
         Context context = this;
-        GeoPackage geoPackage = hubsContext.getPackage();
+        mGeoPackage = mHubsContext.getPackage();
 
      /*   SpatialReferenceSystemDao srsDao = geoPackage.getSpatialReferenceSystemDao();
         ContentsDao contentsDao = geoPackage.getContentsDao();
@@ -141,7 +146,6 @@ public class MapFeaturesActivity extends AppCompatActivity
 
 // Feature and tile tables
     //    List<String> features = geoPackage.getFeatureTables();
-        List<String> tiles = geoPackage.getTileTables();
 /*
 // Query Features
         String featureTable = features.get(0);
@@ -163,11 +167,9 @@ public class MapFeaturesActivity extends AppCompatActivity
             featureCursor.close();
         }
 
-*/
+
 // Query Tiles
-        String tileTable = tiles.get(0);
-        TileDao tileDao = geoPackage.getTileDao(tileTable);
-  /*      TileCursor tileCursor = tileDao.queryForAll();
+        TileCursor tileCursor = tileDao.queryForAll();
         try{
             while(tileCursor.moveToNext()){
                 TileRow tileRow = tileCursor.getRow();
@@ -178,19 +180,86 @@ public class MapFeaturesActivity extends AppCompatActivity
         }finally{
             tileCursor.close();
         }
-        */
-
+*/
 // Tile Provider (GeoPackage or Google API)
         try {
+            List<String> tiles = mGeoPackage.getTileTables();
+            String tileTable = tiles.get(0);
+            TileDao tileDao = mGeoPackage.getTileDao(tileTable);
             TileProvider overlay = GeoPackageOverlayFactory.getTileProvider(tileDao);
             TileOverlayOptions overlayOptions = new TileOverlayOptions();
             overlayOptions.tileProvider(overlay);
-            overlayOptions.zIndex(1);
+            overlayOptions.zIndex(-1);
             mMap.addTileOverlay(overlayOptions);
         }
         catch (Exception ex){
             Log.d("OSHAPP", ex.getLocalizedMessage());
         }
+
+
+        List<String> features = mGeoPackage.getFeatureTables();
+        String featureTable = features.get(2);
+        FeatureDao featureDao = mGeoPackage.getFeatureDao(featureTable);
+  /*      GoogleMapShapeConverter converter = new GoogleMapShapeConverter(
+                featureDao.getProjection());
+        FeatureCursor featureCursor = featureDao.queryForAll();
+        try{
+            while(featureCursor.moveToNext()){
+                FeatureRow featureRow = featureCursor.getRow();
+                GeoPackageGeometryData geometryData = featureRow.getGeometry();
+                Geometry geometry = geometryData.getGeometry();
+                GoogleMapShape shape = converter.toShape(geometry);
+                GoogleMapShape mapShape = GoogleMapShapeConverter
+                        .addShapeToMap(mMap, shape);
+                // ...
+            }
+        }finally{
+            featureCursor.close();
+        }
+*/
+        FeatureIndexManager indexer = new FeatureIndexManager(context, mGeoPackage, featureDao);
+        indexer.setIndexLocation(FeatureIndexType.GEOPACKAGE);
+        int indexedCount = indexer.index();
+
+        // Feature Tile Provider (dynamically draw tiles from features)
+        FeatureTiles featureTiles = new DefaultFeatureTiles(context, featureDao);
+        featureTiles.setMaxFeaturesPerTile(1000); // Set max features to draw per tile
+        NumberFeaturesTile numberFeaturesTile = new NumberFeaturesTile(context); // Custom feature tile implementation
+        featureTiles.setMaxFeaturesTileDraw(numberFeaturesTile); // Draw feature count tiles when max features passed
+        featureTiles.setIndexManager(indexer); // Set index manager to query feature indices
+        FeatureOverlay featureOverlay = new FeatureOverlay(featureTiles);
+        featureOverlay.setMinZoom(featureDao.getZoomLevel()); // Set zoom level to start showing tiles
+        TileOverlayOptions featureOverlayOptions = new TileOverlayOptions();
+        featureOverlayOptions.tileProvider(featureOverlay);
+        featureOverlayOptions.zIndex(-1); // Draw the feature tiles behind map markers
+        mMap.addTileOverlay(featureOverlayOptions);
+
+
+       /*
+        BoundingBox tileBounds = tileDao.getBoundingBox();
+        ProjectionTransform transform = ProjectionFactory
+                .getProjection((long)ProjectionConstants.EPSG_WEB_MERCATOR)
+                .getTransformation((long)ProjectionConstants.EPSG_WORLD_GEODETIC_SYSTEM);
+
+        BoundingBox projectedBoundingBox = tileBounds.transform(transform);
+        LatLngBounds.Builder boundsBuilder = LatLngBounds.builder();
+        boundsBuilder.include(new LatLng(projectedBoundingBox.getMinLatitude(), projectedBoundingBox.getMinLongitude()));
+        boundsBuilder.include(new LatLng(projectedBoundingBox.getMinLatitude(), projectedBoundingBox.getMaxLongitude()));
+        boundsBuilder.include(new LatLng(projectedBoundingBox.getMaxLatitude(), projectedBoundingBox.getMinLongitude()));
+        boundsBuilder.include(new LatLng(projectedBoundingBox.getMaxLatitude(), projectedBoundingBox.getMaxLongitude()));
+
+        Log.d("OSHAPP", String.format("%.3f, %.3f - %.3f, %.3f",
+                projectedBoundingBox.getMinLatitude(),projectedBoundingBox.getMaxLongitude(),
+                projectedBoundingBox.getMaxLatitude(), projectedBoundingBox.getMaxLongitude()));
+
+
+        Log.d("OSHAPP", String.format("%.3f, %.3f",
+                boundsBuilder.build().getCenter().latitude,
+                boundsBuilder.build().getCenter().longitude));
+
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(boundsBuilder.build().getCenter(), 12.0f));
+        */
+
         /*
 
 // Index Features
@@ -225,7 +294,6 @@ public class MapFeaturesActivity extends AppCompatActivity
         int featureTileCount = featureTileGenerator.generateTiles();
 */
 // Close database when done
-        geoPackage.close();
     }
 
 
@@ -244,11 +312,11 @@ public class MapFeaturesActivity extends AppCompatActivity
         mLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
             @Override
             public void onSuccess(Location location) {
-                LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-
-                latLng = new LatLng(32.7153, -117.1573);
-
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 12));
+             //   LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+                //
+                LatLng latLng = new LatLng(32.7153, -117.1573);
+               // mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 9));
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 9));
             }
         });
 
@@ -264,7 +332,7 @@ public class MapFeaturesActivity extends AppCompatActivity
 
     @Override
     public void showMapFeature(MapFeature feature) {
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(feature.Location, 13));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(feature.Location, 9));
     }
 
     @Override

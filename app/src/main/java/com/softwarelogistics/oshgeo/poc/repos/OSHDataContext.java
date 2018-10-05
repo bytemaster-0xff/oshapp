@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.List;
 
 import mil.nga.geopackage.GeoPackage;
+import mil.nga.geopackage.db.GeoPackageCoreConnection;
 import mil.nga.geopackage.extension.related.dublin.DublinCoreType;
 import mil.nga.geopackage.attributes.AttributesColumn;
 import mil.nga.geopackage.attributes.AttributesCursor;
@@ -114,6 +115,15 @@ public class OSHDataContext {
         }
 
         return hubs;
+    }
+
+    public void getTile() {
+
+
+        String sql = "where \"zoom_level\" = 8  AND \"tile_column\" >= 88 AND \"tile_column\" <= 89 AND \"tile_row\" >= 80 AND \"tile_row\" <= 81";
+
+        GeoPackageCoreConnection pkg = mGeoPackage.getDatabase();
+        List<List<Object>> results = pkg.queryResults(sql, new String[0]);
     }
 
     public GeoPackage getPackage() {
