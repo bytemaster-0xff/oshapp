@@ -14,6 +14,7 @@ public class OpenSensorHub {
     public LatLng Location;
     public boolean SecureConnection;
     public String URI;
+    public String Path;
     public long Port;
 
     public Date LastContact;

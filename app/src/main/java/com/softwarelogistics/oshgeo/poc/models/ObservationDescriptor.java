@@ -12,12 +12,16 @@ public class ObservationDescriptor {
     public ObservationDescriptor() {
         Outputs = new ArrayList<>();
         DataStreams = new ArrayList<>();
+        Components = new ArrayList<>();
     }
 
     public String Name;
     public String Id;
+    public List<String> Components;
     public List<ObservationDescriptorOutput> Outputs;
     public List<ObservationDescriptorOutput> DataStreams;
+
+    public Double SOSVersion;
 
     public String ValidTimeStart;
     public String ValidTimeEnd;
@@ -26,8 +30,9 @@ public class ObservationDescriptor {
 
     public LatLng Position;
 
-    public static ObservationDescriptor create(Node node)  {
+    public static ObservationDescriptor createV2(Node node)  {
         ObservationDescriptor descriptor = new ObservationDescriptor();
+        descriptor.SOSVersion = 2.0;
 
         Node descriptionNode = NodeUtils.findNode(node.getChildNodes(),"description");
         Node sensorDescription = NodeUtils.findNode(descriptionNode.getChildNodes(),"SensorDescription");
@@ -80,6 +85,50 @@ public class ObservationDescriptor {
                 if(posText !=  null) {
                     String[] parts = posText.split(" ");
                     if (parts.length == 3) {
+                        try {
+                            double lat = Double.parseDouble(parts[0]);
+                            double lng = Double.parseDouble(parts[1]);
+                            descriptor.Position = new LatLng(lat, lng);
+                        } catch (Exception ex) {
+                            /* nop */
+                        }
+                    }
+                }
+            }
+        }
+
+        return descriptor;
+    }
+
+    public static ObservationDescriptor createV1(Node node) {
+        ObservationDescriptor descriptor = new ObservationDescriptor();
+        descriptor.SOSVersion = 1.0;
+        Node memberNode = NodeUtils.findNode(node.getChildNodes(), "member");
+        Node systemNode = NodeUtils.findNode(memberNode.getChildNodes(), "System");
+        descriptor.Name = NodeUtils.getNodeText(systemNode.getChildNodes(), "name");
+        descriptor.Description = NodeUtils.getNodeText(systemNode.getChildNodes(), "description");
+        Node componentsNode = NodeUtils.findNode(systemNode.getChildNodes(), "components");
+        if(componentsNode != null) {
+            Node componentListNode = NodeUtils.findNode(componentsNode.getChildNodes(), "ComponentList");
+            if(componentListNode != null) {
+                List<Node> componentsList = NodeUtils.getMatchingChildren(componentListNode.getChildNodes(), "component");
+                for (Node component : componentsList) {
+                    String href = NodeUtils.getAttrValue(component.getAttributes(), "xlink:href");
+                    if (href != null && href.length() > 0) {
+                        descriptor.Components.add(href);
+                    }
+                }
+            }
+        }
+
+        Node positionNode = NodeUtils.findNode(systemNode.getChildNodes(),"location");
+        if(positionNode !=  null) {
+            Node pointNode = NodeUtils.findNode(positionNode.getChildNodes(), "Point");
+            if(pointNode != null){
+                String posText = NodeUtils.getNodeText(pointNode.getChildNodes(),"coordinates");
+                if(posText !=  null) {
+                    String[] parts = posText.split(" ");
+                    if (parts.length == 2) {
                         try {
                             double lat = Double.parseDouble(parts[0]);
                             double lng = Double.parseDouble(parts[1]);

@@ -185,6 +185,7 @@ public class MapFeaturesActivity extends AppCompatActivity
         try {
             List<String> tiles = mGeoPackage.getTileTables();
             String tileTable = tiles.get(0);
+            BoundingBox bb = mHubsContext.getBoundingBox();
             TileDao tileDao = mGeoPackage.getTileDao(tileTable);
             TileProvider overlay = GeoPackageOverlayFactory.getTileProvider(tileDao);
             TileOverlayOptions overlayOptions = new TileOverlayOptions();

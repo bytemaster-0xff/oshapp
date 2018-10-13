@@ -29,8 +29,7 @@ public class NodeUtils {
         return null;
     }
 
-    public static String getAttrValue(NamedNodeMap map, String name)
-    {
+    public static String getAttrValue(NamedNodeMap map, String name){
         Node node = map.getNamedItem(name);
         if(node == null){
             return "";
@@ -41,8 +40,7 @@ public class NodeUtils {
     }
 
 
-    public static String getAttrValue(NamedNodeMap map, String uri, String name)
-    {
+    public static String getAttrValue(NamedNodeMap map, String uri, String name) {
         Node node = map.getNamedItemNS(uri,name);
         if(node == null){
             return "";

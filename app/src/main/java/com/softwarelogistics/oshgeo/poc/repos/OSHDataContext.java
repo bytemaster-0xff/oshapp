@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import mil.nga.geopackage.BoundingBox;
 import mil.nga.geopackage.GeoPackage;
 import mil.nga.geopackage.db.GeoPackageCoreConnection;
 import mil.nga.geopackage.extension.related.dublin.DublinCoreType;
@@ -65,6 +66,7 @@ public class OSHDataContext {
     static final String HUB_COL_HUB_LOGIN_PASSWORD = "hub_login_password";
     static final String HUB_COL_SECURE_CONNECTION = "secure_connection";
     static final String HUB_COL_IP = "ipaddress";
+    static final String HUB_COL_PATH = "path";
     static final String HUB_COL_IMAGE = "image";
     static final String HUB_COL_PORT = "port";
     static final String HUB_COL_LAST_CONTACT = "last_contact";
@@ -94,9 +96,13 @@ public class OSHDataContext {
 
     private String mGeoPackageName;
 
-    public OSHDataContext(GeoPackage geoPackage, String packageName) {
+    public  OSHDataContext(GeoPackage geoPackage, String packageName) {
         mGeoPackage = geoPackage;
         mGeoPackageName = packageName;
+        BoundingBox bb = getBoundingBox();
+        if(bb != null) {
+            createTables(bb);
+        }
     }
 
     public List<OpenSensorHub> getHubs() {
@@ -118,8 +124,6 @@ public class OSHDataContext {
     }
 
     public void getTile() {
-
-
         String sql = "where \"zoom_level\" = 8  AND \"tile_column\" >= 88 AND \"tile_column\" <= 89 AND \"tile_row\" >= 80 AND \"tile_row\" <= 81";
 
         GeoPackageCoreConnection pkg = mGeoPackage.getDatabase();
@@ -130,15 +134,41 @@ public class OSHDataContext {
         return mGeoPackage;
     }
 
+    public BoundingBox getBoundingBox() {
+        /* Assume the first tile table contains the bounding box for the chart */
+        List<String> tables = mGeoPackage.getTileTables();
+        if(tables.size() > 0) {
+            return mGeoPackage.getContentsBoundingBox(tables.get(0));
+        }
+        return null;
+    }
+
+    public LatLng getCenter() {
+        BoundingBox bb = getBoundingBox();
+        if(bb != null) {
+            return new LatLng((bb.getMaxLatitude() + bb.getMinLatitude()) / 2.0, (bb.getMaxLongitude() + bb.getMinLongitude()) / 2.0);
+        }
+
+        return null;
+    }
+
+    public boolean createTables(BoundingBox bb) {
+        return createTables(bb.getMinLatitude(), bb.getMinLongitude(), bb.getMaxLatitude(), bb.getMaxLongitude());
+    }
+
+    public boolean createTables(double minLat, double minLon, double maxLat, double maxLon) {
+        return createTables(new LatLng(minLat, minLon), new LatLng(maxLat, maxLon));
+    }
+
     public boolean createTables(LatLng northWest, LatLng southEast) {
         try {
             mGeoPackage.createGeometryColumnsTable();
 
-            createHubsTable(northWest, southEast);
-            createSensorsTable(northWest, southEast);
-            createReadingsTable();
-            createValuesTable();
-            createCurrentValuesTable();
+            if(!featureTableExists(HUB_TABLE_NAME)) createHubsTable(northWest, southEast);
+            if(!featureTableExists(SNSR_TABLE_NAME)) createSensorsTable(northWest, southEast);
+            if(!attributeTableExists(READING_TABLE_NAME)) createReadingsTable();
+            if(!attributeTableExists(VALUE_TABLE_NAME)) createValuesTable();
+            if(!attributeTableExists(VALUE_CURRENT_TABLE_NAME)) createCurrentValuesTable();
             return true;
         }
         catch(SQLException ex) {
@@ -210,27 +240,37 @@ public class OSHDataContext {
         geometryColumnsDao.create(geometryColumns);
     }
 
-    private void createHubsTable(LatLng northWest, LatLng southEast) throws SQLException {
-        List<FeatureColumn> columns = new ArrayList<>();
-        int idx = 0;
-        columns.add(FeatureColumn.createPrimaryKeyColumn(idx++, COL_ID));
-        columns.add(FeatureColumn.createGeometryColumn(idx++, COL_GEOMETRY, GeometryType.POINT, true, null));
-        columns.add(FeatureColumn.createColumn(idx++, COL_NAME, GeoPackageDataType.TEXT,true, ""));
-        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_LOCAL_WIFI, GeoPackageDataType.BOOLEAN,true, false));
-        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_SSID, GeoPackageDataType.TEXT,false, null));
-        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_SSID_PASSWORD, GeoPackageDataType.TEXT,false, null));
-        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_HUB_AUTH_TYPE, GeoPackageDataType.TEXT,true, "anonymous"));
-        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_HUB_LOGIN_USERID, GeoPackageDataType.TEXT,false, null));
-        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_HUB_LOGIN_PASSWORD, GeoPackageDataType.TEXT,false, null));
-        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_SECURE_CONNECTION, GeoPackageDataType.BOOLEAN,true, false));
-        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_IP, GeoPackageDataType.TEXT,true, ""));
-        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_LAST_CONTACT, GeoPackageDataType.DATETIME,false, null));
-        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_PORT, GeoPackageDataType.INT,true, 8181));
-        columns.add(FeatureColumn.createColumn(idx++, HUB_COL_IMAGE, GeoPackageDataType.BLOB,false, null));
-        FeatureTable tbl = new FeatureTable(HUB_TABLE_NAME, columns);
-        mGeoPackage.createFeatureTable(tbl);
+    private  boolean featureTableExists(String featureTableName)throws SQLException {
+        List<String> features = mGeoPackage.getFeatureTables();
+        return features.contains(featureTableName);
+    }
 
-        addContentTables(HUB_TABLE_NAME, "List of sensors for a particular sensor hub.", northWest, southEast);
+    private  boolean attributeTableExists(String featureTableName)throws SQLException {
+        List<String> attributes = mGeoPackage.getAttributesTables();
+        return attributes.contains(featureTableName);
+    }
+
+    private void createHubsTable(LatLng northWest, LatLng southEast) throws SQLException {
+            List<FeatureColumn> columns = new ArrayList<>();
+            int idx = 0;
+            columns.add(FeatureColumn.createPrimaryKeyColumn(idx++, COL_ID));
+            columns.add(FeatureColumn.createGeometryColumn(idx++, COL_GEOMETRY, GeometryType.POINT, true, null));
+            columns.add(FeatureColumn.createColumn(idx++, COL_NAME, GeoPackageDataType.TEXT, true, ""));
+            columns.add(FeatureColumn.createColumn(idx++, HUB_COL_LOCAL_WIFI, GeoPackageDataType.BOOLEAN, true, false));
+            columns.add(FeatureColumn.createColumn(idx++, HUB_COL_SSID, GeoPackageDataType.TEXT, false, null));
+            columns.add(FeatureColumn.createColumn(idx++, HUB_COL_SSID_PASSWORD, GeoPackageDataType.TEXT, false, null));
+            columns.add(FeatureColumn.createColumn(idx++, HUB_COL_HUB_AUTH_TYPE, GeoPackageDataType.TEXT, true, "anonymous"));
+            columns.add(FeatureColumn.createColumn(idx++, HUB_COL_HUB_LOGIN_USERID, GeoPackageDataType.TEXT, false, null));
+            columns.add(FeatureColumn.createColumn(idx++, HUB_COL_HUB_LOGIN_PASSWORD, GeoPackageDataType.TEXT, false, null));
+            columns.add(FeatureColumn.createColumn(idx++, HUB_COL_SECURE_CONNECTION, GeoPackageDataType.BOOLEAN, true, false));
+            columns.add(FeatureColumn.createColumn(idx++, HUB_COL_IP, GeoPackageDataType.TEXT, true, ""));
+            columns.add(FeatureColumn.createColumn(idx++, HUB_COL_PATH, GeoPackageDataType.TEXT, true, ""));
+            columns.add(FeatureColumn.createColumn(idx++, HUB_COL_PORT, GeoPackageDataType.INT, true, 8181));
+            columns.add(FeatureColumn.createColumn(idx++, HUB_COL_LAST_CONTACT, GeoPackageDataType.DATETIME, false, null));
+            columns.add(FeatureColumn.createColumn(idx++, HUB_COL_IMAGE, GeoPackageDataType.BLOB, false, null));
+            FeatureTable tbl = new FeatureTable(HUB_TABLE_NAME, columns);
+            mGeoPackage.createFeatureTable(tbl);
+            addContentTables(HUB_TABLE_NAME, "List of sensors for a particular sensor hub.", northWest, southEast);
     }
 
     /**
@@ -552,6 +592,7 @@ public class OSHDataContext {
 
         hub.SecureConnection = (boolean)row.getValue(HUB_COL_SECURE_CONNECTION);
         hub.URI = row.getValue(HUB_COL_IP).toString();
+        hub.Path = row.getValue(HUB_COL_PATH).toString();
         hub.Port = (long)row.getValue(HUB_COL_PORT);
 
         hub.Name = row.getValue(COL_NAME).toString();
@@ -605,6 +646,7 @@ public class OSHDataContext {
             row.setValue(HUB_COL_HUB_LOGIN_USERID, hub.HubUserId);
             row.setValue(HUB_COL_HUB_LOGIN_PASSWORD, hub.HubPassword);
             row.setValue(HUB_COL_IP, hub.URI);
+            row.setValue(HUB_COL_PATH, hub.Path);
             row.setValue(HUB_COL_PORT, hub.Port);
             if (hub.LastContact != null) {
                 row.setValue(HUB_COL_LAST_CONTACT, hub.LastContact);

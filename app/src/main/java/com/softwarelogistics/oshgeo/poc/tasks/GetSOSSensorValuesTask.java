@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import mil.nga.geopackage.BoundingBox;
+
 public class GetSOSSensorValuesTask extends AsyncTask<SensorHubUpdateRequest, String, List<SensorValue>> {
 
     public GetSensorValuesResponseHandler responseHandler = null;
@@ -34,12 +36,13 @@ public class GetSOSSensorValuesTask extends AsyncTask<SensorHubUpdateRequest, St
 
         OpenSensorHub hub = args[0].Hub;
         OSHDataContext ctx = args[0].DataContext;
+        BoundingBox bb = ctx.getBoundingBox();
 
-        SosClient client = new SosClient(hub.SecureConnection,hub.URI,hub.Port);
+        SosClient client = new SosClient(bb, hub.SecureConnection,hub.URI, hub.Path, hub.Port);
         Capabilities capabilities = client.loadOSHData();
         if(capabilities != null) {
             for(Offering offering : capabilities.Offerings){
-                ObservationDescriptor descriptor = client.loadObservationDescriptor(offering.Procedure);
+                ObservationDescriptor descriptor = client.loadObservationDescriptor(capabilities.SOSVersion, offering.Procedure);
                 capabilities.Descriptors.add(descriptor);
 
                 Sensor sensor = ctx.findSensor(hub.Id, descriptor.Id);
@@ -49,7 +52,7 @@ public class GetSOSSensorValuesTask extends AsyncTask<SensorHubUpdateRequest, St
                     for(ObservationDescriptorDataField field : output.Fields) {
                         publishProgress(String.format("Sensor Value: %s - %s", offering.Name, field.Label));
                         if(field.FieldType != ObservationDescriptorDataField.FieldTypes.Time) {
-                            SensorValue value = client.getSensorValue(descriptor, offering, field);
+                            SensorValue value = client.getSensorValue(descriptor, capabilities.SOSVersion, offering, field);
                             if(value != null) {
                                 value.SensorId = sensor.Id;
                                 value.HubId = hub.Id;
@@ -64,7 +67,7 @@ public class GetSOSSensorValuesTask extends AsyncTask<SensorHubUpdateRequest, St
                     for(ObservationDescriptorDataField field : output.Fields) {
                         publishProgress(String.format("Sensor Value: %s - %s", offering.Name, field.Label));
                         if(field.FieldType != ObservationDescriptorDataField.FieldTypes.Time) {
-                            SensorValue value = client.getSensorValue(descriptor, offering, field);
+                            SensorValue value = client.getSensorValue(descriptor, capabilities.SOSVersion, offering, field);
                             if(value != null) {
                                 value.SensorId = sensor.Id;
                                 value.HubId = hub.Id;

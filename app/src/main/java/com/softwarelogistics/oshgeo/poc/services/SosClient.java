@@ -4,6 +4,7 @@ package com.softwarelogistics.oshgeo.poc.services;
 import android.icu.util.Output;
 import android.util.Log;
 
+import com.softwarelogistics.oshgeo.poc.activities.MainActivity;
 import com.softwarelogistics.oshgeo.poc.models.Capabilities;
 import com.softwarelogistics.oshgeo.poc.models.ObservationDescriptor;
 import com.softwarelogistics.oshgeo.poc.models.ObservationDescriptorDataField;
@@ -28,19 +29,24 @@ import java.util.Scanner;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import mil.nga.geopackage.BoundingBox;
+
 public class SosClient  {
     private boolean mHttps;
     private String mUri;
+    private String mPath;
     private long mPort;
+    private BoundingBox mBoundingBox;
 
-    public SosClient(boolean https, String uri, long port){
+    public SosClient(BoundingBox boundingBox, boolean https, String uri, String path, long port){
         mHttps = https;
+        mPath = path;
         mUri = uri;
         mPort = port;
+        mBoundingBox = boundingBox;
     }
 
-    private String readStringFromURL(String requestURL) throws IOException
-    {
+    private String readStringFromURL(String requestURL) throws IOException {
         try (Scanner scanner = new Scanner(new URL(requestURL).openStream(),
                 StandardCharsets.UTF_8.toString()))
         {
@@ -49,8 +55,14 @@ public class SosClient  {
         }
     }
 
-    public ObservationDescriptor loadObservationDescriptor(String procedure){
-        String offeringUrl = String.format("%s://%s:%d/sensorhub/sos?service=SOS&version=2.0&request=DescribeSensor&procedure=%s", mHttps ? "https" : "http", mUri, mPort, procedure);
+    public ObservationDescriptor loadObservationDescriptor(double hubVersion, String procedure){
+        String offeringUrl = String.format("%s://%s:%d%s?service=SOS&version=%.1f.0&request=DescribeSensor&procedure=%s", mHttps ? "https" : "http", mUri, mPort, mPath, hubVersion, procedure);
+
+        if(hubVersion == 1.0) {
+            offeringUrl += "&outputFormat=text%2Fxml%3Bsubtype%3D%22sensorML%2F1.0.1%22\n";
+        }
+
+        Log.d(MainActivity.TAG, offeringUrl);
 
         HttpURLConnection urlConnection = null;
         InputStream xmlInputStream = null;
@@ -65,11 +77,27 @@ public class SosClient  {
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document doc = builder.parse(xmlInputStream);
             Node node = doc.getFirstChild();
-            ObservationDescriptor descriptor = ObservationDescriptor.create(node);
-            Log.d("log.osh", "Got descriptor - ");
+
+            ObservationDescriptor descriptor = null;
+
+            if(hubVersion == 2.0) {
+                descriptor = ObservationDescriptor.createV2(node);
+            }
+            else if(hubVersion == 1.0) {
+                descriptor = ObservationDescriptor.createV1(node);
+            }
+
+            if(descriptor != null) {
+                Log.d(MainActivity.TAG, "Got descriptor - " + descriptor.Name);
+            }
+            else {
+                Log.d(MainActivity.TAG, "Could not load descriptor for procedure: " + procedure);
+            }
+
             return descriptor;
+
         } catch (Exception e) {
-            Log.d("log.osh", "Exception loading descriptor " + e.getLocalizedMessage());
+            Log.d(MainActivity.TAG, "Exception loading descriptor " + e.getLocalizedMessage());
             e.printStackTrace();
         } finally {
             if (urlConnection != null) {
@@ -90,12 +118,14 @@ public class SosClient  {
     }
 
     public Capabilities loadOSHData() {
-        String capabilitiesUrl = String.format("%s://%s:%d/sensorhub/sos?service=SOS&version=2.0&request=GetCapabilities", mHttps ? "https" : "http", mUri, mPort);
+        String capabilitiesUrl = String.format("%s://%s:%d%s?service=SOS&version=2.0&request=GetCapabilities", mHttps ? "https" : "http", mUri, mPort, mPath);
 
         HttpURLConnection urlConnection = null;
         InputStream xmlInputStream = null;
         try {
-            Log.d("log.osh","Calling capabilities");
+            Log.d(MainActivity.TAG,"Calling capabilities");
+            Log.d(MainActivity.TAG,capabilitiesUrl);
+
             URL url = new URL(capabilitiesUrl);
             urlConnection = (HttpURLConnection) url.openConnection();
 
@@ -104,13 +134,12 @@ public class SosClient  {
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document doc = builder.parse(xmlInputStream);
             Node node = doc.getFirstChild();
-            Capabilities capabilities = Capabilities.create(node);
+            Capabilities capabilities = Capabilities.create(node, mBoundingBox);
             xmlInputStream.close();
-
             return capabilities;
 
         } catch (Exception e) {
-            Log.d("log.osh", "Exception: " + e.getLocalizedMessage());
+            Log.d(MainActivity.TAG, "Exception: " + e.getLocalizedMessage());
             e.printStackTrace();
         } finally {
             if (urlConnection != null) {
@@ -130,26 +159,20 @@ public class SosClient  {
         return null;
     }
 
-    public SensorValue getSensorValue(ObservationDescriptor descriptors, Offering offering, ObservationDescriptorDataField field){
+    public SensorValue getSensorValue(ObservationDescriptor descriptors, double hubVersion, Offering offering, ObservationDescriptorDataField field){
+        String formatString = "%s://%s:%d%s?service=SOS&version=2.0&request=GetResult&offering=%s&observedProperty=%s&temporalFilter=phenomenonTime,now";
+        String valueUri = String.format(formatString, mHttps ? "https" : "http", mUri, mPort, mPath, offering.Identifier, field.Definition);
 
-        //String offeringId = "urn:osh:esp8266:dht:attic-sos";
-        //String property = "http://sensorml.com/ont/swe/property/AirTemperature";
-
-        String formatString = "%s://%s:%d/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=%s&observedProperty=%s&temporalFilter=phenomenonTime,now";
-        //String formatString = "%s://%s:%d/sensorhub/sos?service=SOS&version=2.0&request=GetResult&offering=%s&observedProperty=%s";
-
-        String valueUri = String.format(formatString, mHttps ? "https" : "http", mUri, mPort, offering.Identifier, field.Definition);
-
-        Log.d("log.osh","");
-        Log.d("log.osh","-------------------------------------------");
-        Log.d("log.osh",offering.Name);
-        Log.d("log.osh",valueUri);
+        Log.d(MainActivity.TAG,"");
+        Log.d(MainActivity.TAG,"-------------------------------------------");
+        Log.d(MainActivity.TAG,offering.Name);
+        Log.d(MainActivity.TAG,valueUri);
 
         try {
             String rawValue = readStringFromURL(valueUri);
             if(rawValue != null) {
                 rawValue = rawValue.trim();
-                Log.d("log.osh", rawValue);
+                Log.d(MainActivity.TAG, rawValue);
 
                 SensorValue value = new SensorValue();
                 value.Name = field.Label;
@@ -172,14 +195,14 @@ public class SosClient  {
                     value.Timestamp = new Date();
                 }
 
-                Log.d("log.osh", "-------------------------------------------");
+                Log.d(MainActivity.TAG, "-------------------------------------------");
 
                 return value;
             }
         }
         catch(Exception e) {
-            Log.d("log.osh",e.getLocalizedMessage());
-            Log.d("log.osh","!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            Log.d(MainActivity.TAG,e.getLocalizedMessage());
+            Log.d(MainActivity.TAG,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         }
 
         return null;

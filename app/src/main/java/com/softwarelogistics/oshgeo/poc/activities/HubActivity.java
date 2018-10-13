@@ -30,6 +30,7 @@ public class HubActivity extends AppCompatActivity {
     private EditText mHubUserName;
     private EditText mHubUserPassword;
     private EditText mHubName;
+    private EditText mPath;
     private EditText mHubSSID;
     private EditText mHubWiFiPassword;
     private EditText mIPAddress;
@@ -74,6 +75,8 @@ public class HubActivity extends AppCompatActivity {
         mIPAddress = findViewById(R.id.edit_hub_ip_addr);
         mPort = findViewById(R.id.edit_hub_port);
 
+        mPath = findViewById(R.id.edit_hub_path);
+
         mAuthType = findViewById(R.id.edit_hub_requires_password);
         mAuthType.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -111,9 +114,21 @@ public class HubActivity extends AppCompatActivity {
             getHub(mHubId);
         }
         else {
+            GeoDataContext ctx = new GeoDataContext(this);
+            GeoPackageDataContext geoCtx = ctx.getPackage(mGeoPackageName);
+            OSHDataContext oshCtx = geoCtx.getOSHDataContext();
+            LatLng center = oshCtx.getCenter();
+            if(center != null) {
+                mHubLocation = new LatLng(center.latitude, center.longitude);
+                mLocation.setText(String.format("%.6f x %.6f", mHubLocation.latitude, mHubLocation.longitude));
+            }
+            else {
+                mLocation.setText("not set");
+            }
+
             mHubId = 0;
+            mPath.setText("/sensorhub/sos");
             mPort.setText ("8181");
-            mLocation.setText("not set");
         }
     }
 
@@ -128,7 +143,6 @@ public class HubActivity extends AppCompatActivity {
 
     private void saveHub() {
         GeoDataContext ctx = new GeoDataContext(this);
-
         GeoPackageDataContext geoCtx = ctx.getPackage(mGeoPackageName);
         OSHDataContext oshCtx = geoCtx.getOSHDataContext();
 
@@ -167,6 +181,7 @@ public class HubActivity extends AppCompatActivity {
 
         hub.SecureConnection = mSecure.isChecked();
         hub.URI = mIPAddress.getText().toString();
+        hub.Path = mPath.getText().toString();
         hub.Name = mHubName.getText().toString();
 
         hub.LocalWiFi = mPrivateWiFi.isChecked();
@@ -205,6 +220,7 @@ public class HubActivity extends AppCompatActivity {
         mHubLocation = hub.Location;
         mHubName.setText(hub.Name);
         mIPAddress.setText(hub.URI);
+        mPath.setText(hub.Path);;
         mPort.setText(String.format("%d", hub.Port));
         mSecure.setChecked(hub.SecureConnection);
         mLocation.setText(String.format("%.6f x %.6f", mHubLocation.latitude, mHubLocation.longitude));

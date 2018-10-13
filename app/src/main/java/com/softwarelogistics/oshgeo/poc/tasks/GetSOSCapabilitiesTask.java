@@ -12,21 +12,28 @@ import com.softwarelogistics.oshgeo.poc.models.Offering;
 import com.softwarelogistics.oshgeo.poc.models.OpenSensorHub;
 import com.softwarelogistics.oshgeo.poc.services.SosClient;
 
-public class GetSOSCapabilitiesTask extends AsyncTask<OpenSensorHub, String, Capabilities> {
+import mil.nga.geopackage.BoundingBox;
+
+public class GetSOSCapabilitiesTask extends AsyncTask<GetCapabilitiesRequest, String, Capabilities> {
     public GetSOSCapabilitiesResponseHandler responseHandler = null;
 
     public ProgressHandler progressHandler = null;
 
     @Override
-    protected Capabilities doInBackground(OpenSensorHub... hub) {
-        SosClient client = new SosClient(hub[0].SecureConnection,hub[0].URI,hub[0].Port);
+    protected Capabilities doInBackground(GetCapabilitiesRequest... request) {
+        OpenSensorHub hub = request[0].Hub;
+        BoundingBox boundingBox = request[0].BoundingBox;
+
+        SosClient client = new SosClient(boundingBox, hub.SecureConnection, hub.URI, hub.Path, hub.Port);
         publishProgress("Downloading Capabilities");
         Capabilities capabilities = client.loadOSHData();
         if(capabilities != null) {
             for(Offering offering : capabilities.Offerings){
                 publishProgress(String.format("Downloading %s", offering.Name));
-                ObservationDescriptor descriptor = client.loadObservationDescriptor(offering.Procedure);
-                capabilities.Descriptors.add(descriptor);
+                ObservationDescriptor descriptor = client.loadObservationDescriptor(capabilities.SOSVersion, offering.Procedure);
+                if(descriptor != null) {
+                    capabilities.Descriptors.add(descriptor);
+                }
             }
         }
 
@@ -38,7 +45,6 @@ public class GetSOSCapabilitiesTask extends AsyncTask<OpenSensorHub, String, Cap
         super.onProgressUpdate(values);
         progressHandler.progressUpdated(String.format(values[0]));
     }
-
 
     @Override
     protected void onPostExecute(Capabilities capabilities) {

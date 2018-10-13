@@ -21,6 +21,7 @@ import com.softwarelogistics.oshgeo.poc.models.SensorReading;
 import com.softwarelogistics.oshgeo.poc.models.SensorValue;
 import com.softwarelogistics.oshgeo.poc.repos.GeoDataContext;
 import com.softwarelogistics.oshgeo.poc.repos.OSHDataContext;
+import com.softwarelogistics.oshgeo.poc.tasks.GetCapabilitiesRequest;
 import com.softwarelogistics.oshgeo.poc.tasks.GetSOSCapabilitiesResponseHandler;
 import com.softwarelogistics.oshgeo.poc.tasks.GetSOSCapabilitiesTask;
 import com.softwarelogistics.oshgeo.poc.tasks.GetSOSSensorValuesTask;
@@ -30,6 +31,8 @@ import com.softwarelogistics.oshgeo.poc.tasks.SensorHubUpdateRequest;
 
 import java.util.Date;
 import java.util.List;
+
+import mil.nga.geopackage.BoundingBox;
 
 public class SensorsActivity extends AppCompatActivity {
 
@@ -46,6 +49,7 @@ public class SensorsActivity extends AppCompatActivity {
 
     private RelativeLayout mSensorBusyMask;
     private TextView mProgressMessage;
+    private BoundingBox mBoundingBox;
 
     // https://www.androidcode.ninja/android-compass-code-example/
 
@@ -78,7 +82,8 @@ public class SensorsActivity extends AppCompatActivity {
 
         GeoDataContext ctx = new GeoDataContext(SensorsActivity.this);
         final OSHDataContext oshHubCtx = ctx.getOSHDataContext(mDatabaseName);
-        mHub = oshHubCtx .getHub(hubId);
+        mHub = oshHubCtx.getHub(hubId);
+        mBoundingBox = oshHubCtx.getBoundingBox();
         populateSensors();
     }
 
@@ -169,6 +174,9 @@ public class SensorsActivity extends AppCompatActivity {
         };
 
         mSensorBusyMask.setVisibility(View.VISIBLE);
-        task.execute(mHub);
+        GetCapabilitiesRequest request = new GetCapabilitiesRequest();
+        request.Hub = mHub;
+        request.BoundingBox = mBoundingBox;
+        task.execute(request);
     }
 }

@@ -244,22 +244,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         manager.exportGeoPackage(mCurrentPackageName, exportDirectory);
-
-
-/*        StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
-        StrictMode.setVmPolicy(builder.build());
-
-        Uri path = Uri.fromFile(exportedFile);
-
-        //Uri path = FileProvider.getUriForFile(this, this.getApplicationContext().getPackageName() + ".my.package.name.provider", exportedFile);
-
-        Intent emailIntent = new Intent(Intent.ACTION_SEND);
-        emailIntent .setType("vnd.android.cursor.dir/email");
-        String to[] = {"asd@gmail.com"};
-        emailIntent .putExtra(Intent.EXTRA_EMAIL, to);
-        emailIntent .putExtra(Intent.EXTRA_STREAM, path);
-        emailIntent .putExtra(Intent.EXTRA_SUBJECT, "Exported Geo Package");
-        startActivity(Intent.createChooser(emailIntent , "Send email..."));*/
     }
 
     private void showAquire() {
