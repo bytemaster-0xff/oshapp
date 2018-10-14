@@ -22,6 +22,8 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
@@ -159,7 +161,77 @@ public class SosClient  {
         return null;
     }
 
-    public SensorValue getSensorValue(ObservationDescriptor descriptors, double hubVersion, Offering offering, ObservationDescriptorDataField field){
+    public List<SensorValue> getSensorValueV1(ObservationDescriptor descriptors, double hubVersion, Offering offering, String fieldName){
+        String formatString = "%s://%s:%d%s?service=SOS&version=1.0.0&request=GetObservation&offering=%s&observedProperty=%s";
+        String valueUri = String.format(formatString, mHttps ? "https" : "http", mUri, mPort, mPath, offering.Name, fieldName);
+        valueUri += "&responseFormat=text%2Fcsv";
+
+        Log.d(MainActivity.TAG, valueUri);
+
+        List<SensorValue> sensorValues = new ArrayList<>();
+
+        try {
+            String rawValue = readStringFromURL(valueUri);
+            if(rawValue != null) {
+                rawValue = rawValue.trim();
+                Log.d(MainActivity.TAG, rawValue);
+
+                String[] lines = rawValue.split("\n");
+                if(lines.length == 2){
+                    String[] headers = lines[0].split(",");
+                    String[] values = lines[1].split(",");
+                    if(headers.length == values.length){
+                        Date timeStamp = null;
+                        for(int idx = 0; idx < headers.length; ++idx) {
+                            SensorValue value = new SensorValue();
+                            value.Name = headers[idx];
+                            value.Name = value.Name.replace("\"", "");
+                            if(!value.Name.contains("latitude") &&
+                                    !value.Name.contains("longitude") &&
+                                    !value.Name.contains("station_id")) {
+                                value.Label = value.Name;
+                                value.StrValue = values[idx];
+                                value.DataType = "string";
+
+                                if (value.Label.contentEquals("date_time")) {
+                                    try {
+                                        value.Timestamp = DateParser.parse(value.StrValue);
+                                    } catch (Exception ex) {
+                                        timeStamp = Calendar.getInstance().getTime();
+                                    }
+                                }
+                                else {
+                                    if(value.Name != null && value.Name.length() > 0) {
+                                        sensorValues.add(value);
+                                    }
+                                }
+                            }
+                        }
+
+                        //If Time stamp isn't present on the data set use the current date & time.
+                        if(timeStamp == null){
+                         timeStamp = Calendar.getInstance().getTime();
+                        }
+
+                        for(SensorValue value : sensorValues) {
+                            value.Timestamp = timeStamp;
+                        }
+                    }
+                }
+
+                return sensorValues;
+            }
+        }
+        catch(Exception e) {
+            Log.d(MainActivity.TAG,e.getLocalizedMessage());
+            Log.d(MainActivity.TAG,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        }
+
+        return null;
+
+    }
+
+    public SensorValue getSensorValueV2(ObservationDescriptor descriptors, double hubVersion, Offering offering, ObservationDescriptorDataField field){
         String formatString = "%s://%s:%d%s?service=SOS&version=2.0&request=GetResult&offering=%s&observedProperty=%s&temporalFilter=phenomenonTime,now";
         String valueUri = String.format(formatString, mHttps ? "https" : "http", mUri, mPort, mPath, offering.Identifier, field.Definition);
 

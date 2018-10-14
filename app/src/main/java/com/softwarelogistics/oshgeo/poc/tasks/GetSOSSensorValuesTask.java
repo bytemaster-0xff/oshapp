@@ -4,6 +4,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.softwarelogistics.oshgeo.poc.models.Capabilities;
+import com.softwarelogistics.oshgeo.poc.models.ObservableProperty;
 import com.softwarelogistics.oshgeo.poc.models.ObservationDescriptor;
 import com.softwarelogistics.oshgeo.poc.models.ObservationDescriptorDataField;
 import com.softwarelogistics.oshgeo.poc.models.ObservationDescriptorOutput;
@@ -32,7 +33,7 @@ public class GetSOSSensorValuesTask extends AsyncTask<SensorHubUpdateRequest, St
         List<SensorValue> values = new ArrayList<>();
 
         //TODO: We likely should just pull this from the GeoPackage since everything is there, this ensures we don't miss anything though.
-        publishProgress("Getting Manifest");
+        publishProgress("Downloading Sensor Data");
 
         OpenSensorHub hub = args[0].Hub;
         OSHDataContext ctx = args[0].DataContext;
@@ -48,33 +49,42 @@ public class GetSOSSensorValuesTask extends AsyncTask<SensorHubUpdateRequest, St
                 Sensor sensor = ctx.findSensor(hub.Id, descriptor.Id);
                 List<SensorValue> sensorValues = new ArrayList<>();
 
-                for(ObservationDescriptorOutput output : descriptor.Outputs) {
-                    for(ObservationDescriptorDataField field : output.Fields) {
-                        publishProgress(String.format("Sensor Value: %s - %s", offering.Name, field.Label));
-                        if(field.FieldType != ObservationDescriptorDataField.FieldTypes.Time) {
-                            SensorValue value = client.getSensorValue(descriptor, capabilities.SOSVersion, offering, field);
-                            if(value != null) {
-                                value.SensorId = sensor.Id;
-                                value.HubId = hub.Id;
-                                values.add(value);
-                                sensorValues.add(value);
+                if(capabilities.SOSVersion == 2.0) {
+                    for (ObservationDescriptorOutput output : descriptor.Outputs) {
+                        for (ObservationDescriptorDataField field : output.Fields) {
+                            publishProgress(String.format("Sensor Value: %s - %s", offering.Name, field.Label));
+                            if (field.FieldType != ObservationDescriptorDataField.FieldTypes.Time) {
+                                SensorValue value = client.getSensorValueV2(descriptor, capabilities.SOSVersion, offering, field);
+                                if (value != null) {
+                                    value.SensorId = sensor.Id;
+                                    value.HubId = hub.Id;
+                                    values.add(value);
+                                    sensorValues.add(value);
+                                }
+                            }
+                        }
+                    }
+
+                    for (ObservationDescriptorOutput output : descriptor.DataStreams) {
+                        for (ObservationDescriptorDataField field : output.Fields) {
+                            publishProgress(String.format("Sensor Value: %s - %s", offering.Name, field.Label));
+                            if (field.FieldType != ObservationDescriptorDataField.FieldTypes.Time) {
+                                SensorValue value = client.getSensorValueV2(descriptor, capabilities.SOSVersion, offering, field);
+                                if (value != null) {
+                                    value.SensorId = sensor.Id;
+                                    value.HubId = hub.Id;
+                                    values.add(value);
+                                    sensorValues.add(value);
+                                }
                             }
                         }
                     }
                 }
-
-                for(ObservationDescriptorOutput output : descriptor.DataStreams) {
-                    for(ObservationDescriptorDataField field : output.Fields) {
-                        publishProgress(String.format("Sensor Value: %s - %s", offering.Name, field.Label));
-                        if(field.FieldType != ObservationDescriptorDataField.FieldTypes.Time) {
-                            SensorValue value = client.getSensorValue(descriptor, capabilities.SOSVersion, offering, field);
-                            if(value != null) {
-                                value.SensorId = sensor.Id;
-                                value.HubId = hub.Id;
-                                values.add(value);
-                                sensorValues.add(value);
-                            }
-                        }
+                else if(capabilities.SOSVersion == 1.0) {
+                    for(ObservableProperty property : offering.Properties) {
+                        List<SensorValue> observations = client.getSensorValueV1(descriptor, capabilities.SOSVersion, offering, property.Id);
+                        values.addAll(observations);
+                        sensorValues.addAll(observations);
                     }
                 }
 

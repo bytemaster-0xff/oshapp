@@ -153,6 +153,7 @@ public class SensorsActivity extends AppCompatActivity {
                     sensor.SensorType = "unknown";
                     sensor.Description = descriptor.Description;
                     sensor.SensorUniqueId = descriptor.Id;
+                    sensor.Location = descriptor.Position;
                     GeoDataContext ctx = new GeoDataContext(SensorsActivity.this);
                     final OSHDataContext oshHubCtx = ctx.getOSHDataContext(mDatabaseName);
 

@@ -50,10 +50,12 @@ public class MapFeatureAdapter extends ArrayAdapter<MapFeature> {
         LayoutInflater inflater = ((Activity)getContext()).getLayoutInflater();
         View row = inflater.inflate(mMapFeaturRowId, parent, false);
 
+        TextView  tableName = row.findViewById(R.id.row_map_feature_table_name);
         TextView featureName = row.findViewById(R.id.row_map_feature_name);
-        MapFeature feature = mMapFeatures.get(position);
-        featureName .setText(feature.Name);
 
+        MapFeature feature = mMapFeatures.get(position);
+        featureName.setText(feature.Name);
+        tableName.setText(feature.TableName);
 
         TextView removeDb = row.findViewById(R.id.row_map_feature_view);
         removeDb.setTag(position);

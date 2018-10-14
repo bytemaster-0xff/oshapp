@@ -27,7 +27,6 @@ public class ObservationDescriptor {
     public String ValidTimeEnd;
 
     public String Description;
-
     public LatLng Position;
 
     public static ObservationDescriptor createV2(Node node)  {
@@ -106,6 +105,7 @@ public class ObservationDescriptor {
         Node memberNode = NodeUtils.findNode(node.getChildNodes(), "member");
         Node systemNode = NodeUtils.findNode(memberNode.getChildNodes(), "System");
         descriptor.Name = NodeUtils.getNodeText(systemNode.getChildNodes(), "name");
+        descriptor.Id = descriptor.Name;
         descriptor.Description = NodeUtils.getNodeText(systemNode.getChildNodes(), "description");
         Node componentsNode = NodeUtils.findNode(systemNode.getChildNodes(), "components");
         if(componentsNode != null) {

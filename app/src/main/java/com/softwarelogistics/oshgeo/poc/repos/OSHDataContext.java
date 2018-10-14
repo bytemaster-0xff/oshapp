@@ -42,6 +42,7 @@ import mil.nga.geopackage.features.user.FeatureRow;
 import mil.nga.geopackage.features.user.FeatureTable;
 import mil.nga.geopackage.geom.GeoPackageGeometryData;
 import mil.nga.geopackage.user.custom.UserCustomCursor;
+import mil.nga.sf.Geometry;
 import mil.nga.sf.GeometryType;
 import mil.nga.sf.Point;
 import mil.nga.sf.proj.ProjectionConstants;
@@ -138,7 +139,14 @@ public class OSHDataContext {
         /* Assume the first tile table contains the bounding box for the chart */
         List<String> tables = mGeoPackage.getTileTables();
         if(tables.size() > 0) {
-            return mGeoPackage.getContentsBoundingBox(tables.get(0));
+            /* Scale it up a bit to include some Buoys, very custom for San Diego Phase II */
+            BoundingBox originalBoundingBox = mGeoPackage.getContentsBoundingBox(tables.get(0));
+                return new BoundingBox(
+                         originalBoundingBox.getMinLongitude() - 1,
+                        originalBoundingBox.getMinLatitude() - 1,
+                        originalBoundingBox.getMaxLongitude() + 1,
+                        originalBoundingBox.getMaxLatitude() + 1);
+
         }
         return null;
     }
@@ -431,12 +439,30 @@ public class OSHDataContext {
     private MapFeature featureFromFeatureRow(FeatureRow row){
         MapFeature feature = new MapFeature();
         feature.Id = row.getId();
-        feature.Name = row.getValue(COL_NAME).toString();
-        feature.Description = row.getValue(COL_DESCRIPTION).toString();
+        /* Hack: If it has a name return a row, if not assume it's not something we want to look at */
+        if(row.hasColumn(COL_NAME)) {
+            feature.Name = row.getValue(COL_NAME).toString();
+        }
+        else {
+            feature.Name = "feature";
+        }
+
+        if(row.hasColumn(COL_DESCRIPTION)) {
+            feature.Description = row.getValue(COL_DESCRIPTION).toString();
+        }
+        else {
+            feature.Description = "?";
+        }
 
         GeoPackageGeometryData geometryData = row.getGeometry();
-        Point point = (Point)geometryData.getGeometry();
-        feature.Location = new LatLng(point.getY(), point.getX());
+        Geometry geometery = geometryData.getGeometry();
+        GeometryType geoType = geometery.getGeometryType();
+        switch(geoType){
+            case POINT:
+                Point point = (Point) geometryData.getGeometry();
+                feature.Location = new LatLng(point.getY(), point.getX());
+                break;
+        }
 
         return  feature;
     }
@@ -739,7 +765,11 @@ public class OSHDataContext {
         FeatureDao featureDao = mGeoPackage.getFeatureDao(featureTable);
         FeatureCursor featureCursor = featureDao.queryForAll();
         while(featureCursor.moveToNext()){
-            features.add(featureFromFeatureRow(featureCursor.getRow()));
+            MapFeature featureRow = featureFromFeatureRow(featureCursor.getRow());
+            features.add(featureRow);
+            //if(featureRow != null) {
+
+            //}
         }
 
         return features;

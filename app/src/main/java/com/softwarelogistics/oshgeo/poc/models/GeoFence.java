@@ -32,20 +32,15 @@ public class GeoFence {
     }
 
     public boolean intersects(BoundingBox otherBoundingBox) {
-        Log.d(MainActivity.TAG, "-------------------");
         BoundingBox thisBoundingBox = toBoundingBox();
-        boolean intersects = thisBoundingBox.intersects(otherBoundingBox);
-        if(intersects) {
-            Log.d(MainActivity.TAG, "YES");
+        if(thisBoundingBox.getMinLongitude() > otherBoundingBox.getMinLongitude() &&
+                thisBoundingBox.getMinLongitude() < otherBoundingBox.getMaxLongitude() &&
+                thisBoundingBox.getMinLatitude() > otherBoundingBox.getMinLatitude() &&
+                thisBoundingBox.getMinLatitude() < otherBoundingBox.getMaxLatitude()) {
+            return true;
         }
         else {
-            Log.d(MainActivity.TAG, "NO");
+            return false;
         }
-
-        Log.d(MainActivity.TAG, String.format("%f %f %f %f", thisBoundingBox.getMinLatitude(), thisBoundingBox.getMaxLatitude(), thisBoundingBox.getMinLongitude(), thisBoundingBox.getMaxLongitude() ));
-//        Log.d(MainActivity.TAG, String.format("%f %f %f %f", otherBoundingBox.getMinLatitude(), otherBoundingBox.getMaxLatitude(), otherBoundingBox.getMinLongitude(), otherBoundingBox.getMaxLongitude() ));
-        Log.d(MainActivity.TAG, "-------------------");
-
-        return intersects;
     }
 }

@@ -106,7 +106,6 @@ public class MapFeaturesActivity extends AppCompatActivity
 
         mFeatures = new ArrayList<>();
 
-        /*
         GeoDataContext ctx = new GeoDataContext(this);
         OSHDataContext hubsContext = ctx.getOSHDataContext(mGeoPackageName);
         List<String> featureTables = hubsContext.getFeatureTables();
@@ -120,7 +119,6 @@ public class MapFeaturesActivity extends AppCompatActivity
 
         mMapFeatureAdapter = new MapFeatureAdapter(this, R.layout.list_row_map_feature, mFeatures, this);
         mFeaturesList.setAdapter(mMapFeatureAdapter);
-        */
     }
 
     OSHDataContext mHubsContext;

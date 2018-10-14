@@ -8,6 +8,7 @@ public class MapFeature {
 
     }
 
+
     public long Id;
     public String Name;
     public String Description;
