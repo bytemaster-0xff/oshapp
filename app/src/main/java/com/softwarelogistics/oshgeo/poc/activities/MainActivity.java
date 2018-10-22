@@ -1,6 +1,7 @@
 package com.softwarelogistics.oshgeo.poc.activities;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
@@ -9,8 +10,10 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.StrictMode;
 import android.provider.DocumentsContract;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
@@ -25,6 +28,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.nononsenseapps.filepicker.FilePickerActivity;
+import com.nononsenseapps.filepicker.Utils;
 import com.softwarelogistics.oshgeo.poc.R;
 import com.softwarelogistics.oshgeo.poc.repos.GeoDataContext;
 import com.softwarelogistics.oshgeo.poc.repos.GeoPackageDataContext;
@@ -32,9 +37,14 @@ import com.softwarelogistics.oshgeo.poc.utils.FileUtils;
 
 import java.io.File;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
 import mil.nga.geopackage.GeoPackageManager;
 import mil.nga.geopackage.factory.GeoPackageFactory;
+
+import static android.content.Intent.EXTRA_ALLOW_MULTIPLE;
+import static com.nononsenseapps.filepicker.AbstractFilePickerActivity.EXTRA_PATHS;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -42,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout mShowSensorHubs;
     private LinearLayout mShowMap;
     private LinearLayout mExport;
+    private LinearLayout mImport;
     private LinearLayout mShowFeatures;
     private LinearLayout mShowAquire;
 
@@ -51,7 +62,8 @@ public class MainActivity extends AppCompatActivity {
     final int FINE_LOCATION_PERMISSION_REQUEST = 900;
     final int FILE_ACCESS_PERMISSION_REQUEST = 901;
     final int FILE_SELECT_CODE = 902;
-    final int DB_SELECT_CODE = 903;
+    final int DIRECTORY_SELECT_CODE = 903;
+    final int DB_SELECT_CODE = 904;
 
     private boolean hasLocationPermissions = false;
     private boolean hasFilePermissions = false;
@@ -99,6 +111,15 @@ public class MainActivity extends AppCompatActivity {
         });
         mExport.setVisibility(View.INVISIBLE);
 
+        mImport = findViewById(R.id.main_geo_package);
+        mImport.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                importGeoPacakge();
+            }
+        });
+        mImport.setVisibility(View.VISIBLE);
+
         mShowFeatures = findViewById(R.id.main_features_menu);
         mShowFeatures.setOnClickListener(new Button.OnClickListener() {
             @Override
@@ -132,7 +153,7 @@ public class MainActivity extends AppCompatActivity {
             hasLocationPermissions = true;
         }
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED &&
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             hasFilePermissions = false;
             requestFilePermissions();
@@ -156,48 +177,33 @@ public class MainActivity extends AppCompatActivity {
                 FILE_ACCESS_PERMISSION_REQUEST);
     }
 
-    @Override
-    public boolean onPrepareOptionsMenu (Menu menu) {
-        menu.findItem(R.id.main_menu_import_geo_package).setEnabled(true);
-        menu.findItem(R.id.main_menu_export_geo_package).setEnabled(true);
-        return true;
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        switch (id){
-            case R.id.main_menu_import_geo_package:
-                importGeoPacakge();
-                break;
-
-        }
-
-        return true;
-    }
-
     void importGeoPacakge() {
         if(!hasFilePermissions){
-            Toast.makeText(this, "You must allow file permissions.",
-                    Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "You must allow file permissions, please restart the app and accept file permissions.",
+                    Toast.LENGTH_LONG).show();
             return;
         }
 
+
+        try {
+            Intent selectDirectoyIntent = new Intent(this, FilePickerActivity.class);
+            selectDirectoyIntent.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
+            selectDirectoyIntent.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, true);
+            selectDirectoyIntent.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_FILE);
+            selectDirectoyIntent.putExtra(FilePickerActivity.EXTRA_START_PATH, Environment.getExternalStorageDirectory().getPath());
+            startActivityForResult(selectDirectoyIntent, FILE_SELECT_CODE);
+
+        } catch (Exception e) {
+            Log.e(TAG, "exception", e);
+            e.printStackTrace();
+
+            Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
+        }
+
+
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("*/*");
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        //intent.setType("*/*");
+        /*intent.addCategory(Intent.CATEGORY_OPENABLE);
 
         try {
             startActivityForResult(
@@ -207,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
             // Potentially direct the user to the Market with a Dialog
             Toast.makeText(this, "Please install a File Manager.",
                     Toast.LENGTH_SHORT).show();
-        }
+        }*/
     }
 
     @Override
@@ -229,21 +235,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showExport() {
-        String packageFileName = String.format("%s.gpkg", mCurrentPackageName);
-
-        GeoPackageManager manager = GeoPackageFactory.getManager(this);
-
-        File exportDirectory =  Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
-        if (!exportDirectory.exists()) {
-            exportDirectory.mkdir();
+        if(!hasFilePermissions){
+            Toast.makeText(this, "You must allow file permissions.",
+                    Toast.LENGTH_SHORT).show();
+            return;
         }
+        try {
+            Intent selectDirectoyIntent = new Intent(this, FilePickerActivity.class);
+            selectDirectoyIntent.putExtra(FilePickerActivity.EXTRA_ALLOW_MULTIPLE, false);
+            selectDirectoyIntent.putExtra(FilePickerActivity.EXTRA_ALLOW_CREATE_DIR, true);
+            selectDirectoyIntent.putExtra(FilePickerActivity.EXTRA_MODE, FilePickerActivity.MODE_DIR);
+            selectDirectoyIntent.putExtra(FilePickerActivity.EXTRA_START_PATH, Environment.getExternalStorageDirectory().getPath());
+            startActivityForResult(selectDirectoyIntent, DIRECTORY_SELECT_CODE);
 
-        File exportedFile = new File(exportDirectory, packageFileName);
-        if (exportedFile.exists()) {
-            exportedFile.delete();
+        } catch (Exception e) {
+            Log.e(TAG, "exception", e);
+            e.printStackTrace();
+
+            Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
         }
-
-        manager.exportGeoPackage(mCurrentPackageName, exportDirectory);
     }
 
     private void showAquire() {
@@ -294,31 +304,85 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @NonNull
+    public static List<Uri> getSelectedFilesFromResult(@NonNull Intent data) {
+        List<Uri> result = new ArrayList<>();
+        if (data.getBooleanExtra(EXTRA_ALLOW_MULTIPLE, false)) {
+            List<String> paths = data.getStringArrayListExtra(EXTRA_PATHS);
+            if (paths != null) {
+                for (String path : paths) {
+                    result.add(Uri.parse(path));
+                }
+            }
+        } else {
+            result.add(data.getData());
+        }
+        return result;
+    }
+
+    private void exportPackage(final File exportDirectory) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Log.d(MainActivity.TAG, "Starting Export Process");
+
+                    String packageFileName = String.format("%s.gpkg", mCurrentPackageName);
+                    GeoPackageManager manager = GeoPackageFactory.getManager(MainActivity.this);
+                    manager.exportGeoPackage(mCurrentPackageName, packageFileName, exportDirectory);
+
+                    Log.d(MainActivity.TAG, "package exproted");
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+
+                    Log.d(MainActivity.TAG, ex.getCause().getLocalizedMessage());
+                    Log.d(MainActivity.TAG, ex.getMessage());
+                }
+            }
+        }).start();
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         switch (requestCode) {
-            case FILE_SELECT_CODE:
-                if (resultCode == RESULT_OK) {
-                    // Get the Uri of the selected file
-                    Uri uri = data.getData();
+            case DIRECTORY_SELECT_CODE:
+                if(resultCode == Activity.RESULT_OK) {
+                     Uri outputUri =  data.getData();
+                     String path = outputUri.getPath();
+                     path = path.substring(5);
 
-                    File geoPackageFile = FileUtils.getFile(this, uri);
+                    final File exportDirectory = new File(path);
+                    Toast.makeText(this, "Exporting to: " + exportDirectory.getPath(), Toast.LENGTH_LONG).show();
 
-                    try {
-                        GeoDataContext ctx = new GeoDataContext(this);
-                        ctx.importPackage(geoPackageFile);
-                        Log.d(TAG, "package imported");
-                    }
-                    catch (Exception ex){
-                        Log.d(TAG, ex.getLocalizedMessage());
-                    }
+                    exportPackage(exportDirectory);
                 }
 
+                break;
 
+            case FILE_SELECT_CODE:
+                if (resultCode == RESULT_OK) {
 
+                    File geoPackageFile = null;
+
+                    List<Uri> files = getSelectedFilesFromResult(data);
+                    for (Uri uri: files) {
+                        geoPackageFile = Utils.getFileForUri(uri);
+                        break;
+                    }
+
+                    if(geoPackageFile != null) {
+                        try {
+                            GeoDataContext ctx = new GeoDataContext(this);
+                            ctx.importPackage(geoPackageFile);
+                            Toast.makeText(this, "Package Imported", Toast.LENGTH_LONG).show();
+                        } catch (Exception ex) {
+                            Toast.makeText(this, ex.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    }
+                }
                 break;
             case DB_SELECT_CODE:
                 if (resultCode == GeoPackagesActivity.EXTRA_DB_SELECTED_RESULTCODE) {
@@ -326,12 +390,12 @@ public class MainActivity extends AppCompatActivity {
                     mShowMap.setVisibility(View.VISIBLE);
                     mShowFeatures.setVisibility(View.VISIBLE);
                     mShowAquire.setVisibility(View.VISIBLE);
+                    mExport.setVisibility(View.VISIBLE);
 
                     mCurrentPackageName = data.getStringExtra(MainActivity.EXTRA_DB_NAME);
                     mCurrentDBName.setText(data.getStringExtra(MainActivity.EXTRA_DB_NAME));
 
-                    //TODO: Should not be that difficult to export a file!
-                    mExport.setVisibility(View.GONE);
+
 
                     GeoDataContext ctx = new GeoDataContext(this);
                     GeoPackageDataContext pkgCtx = ctx.getPackage(mCurrentPackageName);

@@ -10,7 +10,15 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -29,10 +37,15 @@ import com.google.android.gms.maps.model.TileOverlayOptions;
 import com.google.android.gms.maps.model.TileProvider;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.softwarelogistics.oshgeo.poc.R;
+import com.softwarelogistics.oshgeo.poc.adapters.EditHubHandler;
+import com.softwarelogistics.oshgeo.poc.adapters.HubsAdapter;
 import com.softwarelogistics.oshgeo.poc.adapters.MapFeatureAdapter;
 import com.softwarelogistics.oshgeo.poc.adapters.MapFeatureHandler;
+import com.softwarelogistics.oshgeo.poc.adapters.RemoveHubHandler;
+import com.softwarelogistics.oshgeo.poc.adapters.SensorsAdapter;
 import com.softwarelogistics.oshgeo.poc.models.MapFeature;
 import com.softwarelogistics.oshgeo.poc.models.OpenSensorHub;
+import com.softwarelogistics.oshgeo.poc.models.Sensor;
 import com.softwarelogistics.oshgeo.poc.repos.GeoDataContext;
 import com.softwarelogistics.oshgeo.poc.repos.OSHDataContext;
 
@@ -78,17 +91,33 @@ import mil.nga.sf.proj.ProjectionFactory;
 import mil.nga.sf.proj.ProjectionTransform;
 
 public class MapFeaturesActivity extends AppCompatActivity
-        implements OnMapReadyCallback, MapFeatureHandler {
+        implements OnMapReadyCallback, MapFeatureHandler, EditHubHandler, RemoveHubHandler {
 
 
-    private MapFeatureAdapter mMapFeatureAdapter;
+    private HubsAdapter mHubsAdapter;
+    private SensorsAdapter mSensorsAdapter;
+
     private String mGeoPackageName;
     private FusedLocationProviderClient mLocationClient;
-    private ListView mFeaturesList;
+
+    private ListView mHubsLists;
+    private ListView mSensorsLists;
+
     private SupportMapFragment mMapFragment;
     private GoogleMap mMap;
+
+    List<OpenSensorHub> mHubs;
+    List<Sensor> mSensors;
+
+    OpenSensorHub mCurrentHub;
+
+    RelativeLayout mHubNameSection;
+    TextView mHubName;
+
     private List<Marker> mHubMarkers;
-    private List<MapFeature> mFeatures;
+
+    private OSHDataContext mHubsContext;
+    private GeoPackage mGeoPackage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,31 +127,142 @@ public class MapFeaturesActivity extends AppCompatActivity
         mMapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.features_map);
         mMapFragment.getMapAsync(this);
 
-        mFeaturesList = findViewById(R.id.map_feature_features_list);
+        mHubsLists = findViewById(R.id.maps_list_hubs);
+        mHubsLists.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                OpenSensorHub hub = mHubs.get(i);
+                openHub(hub.Id);
+            }
+        });
+
+        mHubNameSection = findViewById(R.id.maps_selected_hub_section);
+        mHubNameSection.setVisibility(View.GONE);
+        mHubName = findViewById(R.id.maps_hub_name);
+
+        mSensorsLists = findViewById(R.id.map_list_sensors);
+        mSensorsLists.setVisibility(View.GONE);
 
         mGeoPackageName = getIntent().getStringExtra(MainActivity.EXTRA_DB_NAME);
         mLocationClient = LocationServices.getFusedLocationProviderClient(this);
         mHubMarkers = new ArrayList<>();
 
-        mFeatures = new ArrayList<>();
-
         GeoDataContext ctx = new GeoDataContext(this);
         OSHDataContext hubsContext = ctx.getOSHDataContext(mGeoPackageName);
-        List<String> featureTables = hubsContext.getFeatureTables();
-        for(String featureTable : featureTables){
-            List<MapFeature> features = hubsContext.getFeatures(featureTable);
-            for(MapFeature feature : features){
-                feature.TableName = featureTable;
-                mFeatures.add(feature);
-            }
-        }
+        mHubs = hubsContext.getHubs();
 
-        mMapFeatureAdapter = new MapFeatureAdapter(this, R.layout.list_row_map_feature, mFeatures, this);
-        mFeaturesList.setAdapter(mMapFeatureAdapter);
+        TextView btn = findViewById(R.id.maps_hub_back);
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mHubNameSection.setVisibility(View.GONE);
+                mSensorsLists.setVisibility(View.GONE);
+                mHubsLists.setVisibility(View.VISIBLE);
+                mCurrentHub = null;
+                for(Marker marker : mHubMarkers) {
+                    marker.remove();
+                }
+            }
+        });
+
+        TextView acquire = findViewById(R.id.maps_hub_aqcuire);
+        acquire.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent myIntent = new Intent(MapFeaturesActivity.this, AcquireActivity.class);
+                myIntent.putExtra(MainActivity.EXTRA_DB_NAME, mGeoPackageName);
+                myIntent.putExtra(AcquireActivity.EXTRA_HUB_ID, mCurrentHub.Id);
+                MapFeaturesActivity.this.startActivityForResult(myIntent, 100);
+            }
+        });
+
+        mHubsAdapter = new HubsAdapter(this, R.layout.list_row_sensor_hub, mHubs, this, this);
+
+        mHubsLists.setAdapter(mHubsAdapter);
+        mHubsLists.invalidate();
     }
 
-    OSHDataContext mHubsContext;
-    GeoPackage mGeoPackage;
+    private void openHub(long hubId) {
+        GeoDataContext ctx = new GeoDataContext(this);
+        OSHDataContext hubsContext = ctx.getOSHDataContext(mGeoPackageName);
+        mSensors = hubsContext.getSensors(hubId);
+
+        mCurrentHub = hubsContext.getHub(hubId);
+        mHubName.setText(mCurrentHub.Name);
+        mHubNameSection.setVisibility(View.VISIBLE);
+
+        mSensorsAdapter = new SensorsAdapter(this, mSensors, R.layout.list_row_sensor);
+        mSensorsLists.setAdapter(mSensorsAdapter);
+        mSensorsLists.invalidate();
+        //mSensorsLists.setVisibility(View.VISIBLE);
+        mHubsLists.setVisibility(View.GONE);
+
+        for (Sensor sensor : mSensors) {
+            MarkerOptions newMarkerOptions = new MarkerOptions().position(sensor.Location);
+
+            newMarkerOptions.title(sensor.Name);
+            Marker newMarker = mMap.addMarker(newMarkerOptions);
+            mHubMarkers.add(newMarker);
+        }
+    }
+
+    private void showSensor(long sensorId){
+        Intent intent = new Intent(this, SensorObservationActivity.class);
+        intent.putExtra(MainActivity.EXTRA_DB_NAME, mGeoPackageName);
+        intent.putExtra(SensorObservationActivity.HUB_ID, mCurrentHub.Id);
+        intent.putExtra(SensorObservationActivity.SENSOR_ID, sensorId);
+        startActivity(intent);
+    }
+
+    GoogleMap.OnMarkerClickListener markerClickListener = new GoogleMap.OnMarkerClickListener() {
+        @Override
+        public boolean onMarkerClick(Marker marker) {
+            String sensorId = marker.getTitle();
+
+            GeoDataContext ctx = new GeoDataContext(MapFeaturesActivity.this);
+            OSHDataContext hubsContext = ctx.getOSHDataContext(mGeoPackageName);
+             for(Sensor sensor : mSensors) {
+                 if(sensor.Name.contentEquals(sensorId)) {
+                     showSensor(sensor.Id);
+                     break;
+                 }
+             }
+
+            return false;
+        }
+    };
+
+    @Override
+    public boolean onPrepareOptionsMenu (Menu menu) {
+        menu.findItem(R.id.main_menu_import_geo_package).setEnabled(true);
+        menu.findItem(R.id.main_menu_export_geo_package).setEnabled(true);
+        return true;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        switch (id){
+            case R.id.main_menu_import_geo_package:
+
+                break;
+
+        }
+
+        return true;
+    }
 
     protected  void loadBaseMap(){
         GeoDataContext ctx = new GeoDataContext(this);
@@ -295,8 +435,6 @@ public class MapFeaturesActivity extends AppCompatActivity
 // Close database when done
     }
 
-
-
     @Override
     public void onMapReady(GoogleMap map) {
         mMap = map;
@@ -319,12 +457,7 @@ public class MapFeaturesActivity extends AppCompatActivity
             }
         });
 
-     /*   for (MapFeature feature : mFeatures) {
-            MarkerOptions newMarkerOptions = new MarkerOptions().position(feature.Location);
-            newMarkerOptions.title(feature.Name);
-            Marker newMarker = mMap.addMarker(newMarkerOptions);
-            mHubMarkers.add(newMarker);
-        }*/
+        mMap.setOnMarkerClickListener(markerClickListener);
 
         loadBaseMap();
     }
@@ -341,5 +474,15 @@ public class MapFeaturesActivity extends AppCompatActivity
         intent.putExtra(FeatureAttributesActivity.FEATURE_TABLE_NAME, feature.TableName);
         intent.putExtra(FeatureAttributesActivity.FEATURE_ID, feature.Id);
         startActivity(intent);
+    }
+
+    @Override
+    public void onEditHub(OpenSensorHub hub) {
+
+    }
+
+    @Override
+    public void onRemoveHub(OpenSensorHub hub) {
+
     }
 }

@@ -76,6 +76,10 @@ public class AcquireActivity extends AppCompatActivity
     private RelativeLayout mSensorBusyMask;
     private TextView mProgressMessage;
 
+    public final static String EXTRA_HUB_ID = "HUBID";
+
+    private long mCurrentHubId = -1;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,6 +99,10 @@ public class AcquireActivity extends AppCompatActivity
 
         mSensorBusyMask = findViewById(R.id.acquire_progress_mask);
         mProgressMessage = findViewById(R.id.acquire_progress_status);
+
+        if(getIntent().hasExtra(EXTRA_HUB_ID)) {
+            mCurrentHubId = getIntent().getLongExtra(EXTRA_HUB_ID, -1);
+        }
     }
 
     private void refreshHubs() {
@@ -108,6 +116,10 @@ public class AcquireActivity extends AppCompatActivity
             }
 
             for (OpenSensorHub hub : mHubs) {
+                if(hub.Id == mCurrentHubId) {
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(hub.Location, 13));
+                }
+
                 MarkerOptions newMarkerOptions = new MarkerOptions().position(hub.Location);
                 newMarkerOptions.title(hub.Name);
                 Marker newMarker = mMap.addMarker(newMarkerOptions);

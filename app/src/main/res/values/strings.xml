@@ -33,10 +33,13 @@
     <string name="icon_map">&#xf59f;</string>
     <string name="icon_map_pin">&#xf3C5;</string>
     <string name="icon_edit">&#xf044;</string>
-    <string name="icon_export">&#xf56E;</string>
+    <string name="icon_export">&#xf08B;</string>
+    <string name="icon_import">&#xf090;</string>
     <string name="icon_add">&#xf0fe;</string>
     <string name="icon_features">&#xf1e5;</string>
     <string name="icon_acquire">&#xf2F1;</string>
+
+    <string name="icon_back_arrow">&#xf060;</string>
     <string name="icon_left_arrow">&#xf0a5;</string>
     <string name="icon_right_arrow">&#xf0a4;</string>
 

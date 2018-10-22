@@ -6,14 +6,14 @@
     android:orientation="horizontal"
     android:layout_height="64dp">
     <TextView
-        android:textSize="26dp"
+        android:textSize="16dp"
         android:text="FEATURE_NAME"
         android:id="@+id/row_feature_name"
         android:layout_width="wrap_content"
         android:layout_height="match_parent" />
 
     <TextView
-        android:textSize="28dp"
+        android:textSize="18dp"
         android:layout_alignParentRight="true"
         android:layout_gravity="center_vertical"
         android:text="@string/icon_view"
@@ -24,7 +24,7 @@
         android:layout_height="wrap_content" />
 
     <TextView
-        android:textSize="28dp"
+        android:textSize="18dp"
         android:layout_alignParentRight="true"
         android:layout_gravity="center_vertical"
         android:text="@string/icon_edit"
@@ -35,7 +35,7 @@
         android:layout_height="wrap_content" />
 
     <TextView
-        android:textSize="28dp"
+        android:textSize="18dp"
         android:layout_alignParentRight="true"
         android:layout_gravity="center_vertical"
         android:text="@string/icon_trash"
