@@ -43,6 +43,8 @@ public class GetSOSSensorValuesTask extends AsyncTask<SensorHubUpdateRequest, St
         Capabilities capabilities = client.loadOSHData();
         if(capabilities != null) {
             for(Offering offering : capabilities.Offerings){
+                publishProgress("Offering: " + offering.Name);
+
                 ObservationDescriptor descriptor = client.loadObservationDescriptor(capabilities.SOSVersion, offering.Procedure);
                 capabilities.Descriptors.add(descriptor);
 
@@ -82,6 +84,8 @@ public class GetSOSSensorValuesTask extends AsyncTask<SensorHubUpdateRequest, St
                 }
                 else if(capabilities.SOSVersion == 1.0) {
                     for(ObservableProperty property : offering.Properties) {
+                        publishProgress(String.format("Sensor Value %s %s", offering.Name, property.Name));
+
                         List<SensorValue> observations = client.getSensorValueV1(descriptor, capabilities.SOSVersion, offering, property.Id);
                         values.addAll(observations);
                         sensorValues.addAll(observations);

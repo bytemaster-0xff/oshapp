@@ -244,15 +244,23 @@ public class AcquireActivity extends AppCompatActivity
         task.responseHandler = new GetSensorValuesResponseHandler() {
             @Override
             public void gotSensorValues(List<SensorValue> sensorValueList) {
-                SensorReading reading = new SensorReading();
-                reading.HubId = hub.Id;
-                reading.Timestamp = new Date();
+                /*
+                 * Note sensors are updated in the background task, all the new values
+                 * are provided in the result for future use.
+                 */
+
+                if(sensorValueList.size() == 0) {
+                    Toast.makeText(AcquireActivity.this, "Did not receive any new sensor readings.", Toast.LENGTH_LONG).show();
+                    mSensorBusyMask.setVisibility(View.GONE);
+                    return;
+                }
+
                 GeoDataContext ctx = new GeoDataContext(AcquireActivity.this);
                 OSHDataContext oshCtx = ctx.getOSHDataContext(mGeoPackageName);
                 hub.LastContact = new Date();
                 oshCtx.updateHub(hub);
-
                 mSensorBusyMask.setVisibility(View.GONE);
+
                 refreshHubs();
             }
         };
@@ -261,6 +269,7 @@ public class AcquireActivity extends AppCompatActivity
             @Override
             public void progressUpdated(String message) {
                 mProgressMessage.setText(message);
+                Log.d(MainActivity.TAG, "+++++++++++++++++++++++++++++ " + message + " ++++++++++++++++++++++++++++++++++++");
             }
         };
 

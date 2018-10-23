@@ -2,8 +2,10 @@ package com.softwarelogistics.oshgeo.poc.activities;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -20,10 +22,12 @@ import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -321,26 +325,46 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void exportPackage(final File exportDirectory) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Log.d(MainActivity.TAG, "Starting Export Process");
+        LayoutInflater inflater = this.getLayoutInflater();
+        View content = inflater.inflate(R.layout.dlg_export_filename, null);
 
-                    String packageFileName = String.format("%s.gpkg", mCurrentPackageName);
-                    GeoPackageManager manager = GeoPackageFactory.getManager(MainActivity.this);
-                    manager.exportGeoPackage(mCurrentPackageName, packageFileName, exportDirectory);
+        final EditText srvr = content.findViewById(R.id.settings_export_file_name);
+        srvr.setText(mCurrentPackageName);
+        AlertDialog.Builder dlgBldr = new AlertDialog.Builder(this);
+        dlgBldr.setTitle(R.string.app_name);
+        dlgBldr.setView(content);
 
-                    Log.d(MainActivity.TAG, "package exproted");
-                }
-                catch (Exception ex) {
-                    ex.printStackTrace();
+        dlgBldr.setPositiveButton(android.R.string.ok,
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dlg, int which){
+                        final String newPackageName = srvr.getText().toString();
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    Log.d(MainActivity.TAG, "Starting Export Process");
 
-                    Log.d(MainActivity.TAG, ex.getCause().getLocalizedMessage());
-                    Log.d(MainActivity.TAG, ex.getMessage());
-                }
-            }
-        }).start();
+                                    String packageFileName = String.format("%s.gpkg", newPackageName);
+                                    GeoPackageManager manager = GeoPackageFactory.getManager(MainActivity.this);
+                                    manager.exportGeoPackage(mCurrentPackageName, packageFileName, exportDirectory);
+
+                                    Log.d(MainActivity.TAG, "package exproted");
+                                }
+                                catch (Exception ex) {
+                                    ex.printStackTrace();
+
+                                    Log.d(MainActivity.TAG, ex.getCause().getLocalizedMessage());
+                                    Log.d(MainActivity.TAG, ex.getMessage());
+                                }
+                            }
+                        }).start();
+                    }
+                });
+
+        dlgBldr.show();
+
+
     }
 
     @Override
@@ -352,11 +376,14 @@ public class MainActivity extends AppCompatActivity {
                 if(resultCode == Activity.RESULT_OK) {
                      Uri outputUri =  data.getData();
                      String path = outputUri.getPath();
-                     path = path.substring(5);
+
+                     //some file pickers return with /root as the start of the path,
+                     //android doesn't like this...maybe an SU issue?  Just remove it
+                     if(path.startsWith("/root")) {
+                         path = path.substring(5);
+                     }
 
                     final File exportDirectory = new File(path);
-                    Toast.makeText(this, "Exporting to: " + exportDirectory.getPath(), Toast.LENGTH_LONG).show();
-
                     exportPackage(exportDirectory);
                 }
 

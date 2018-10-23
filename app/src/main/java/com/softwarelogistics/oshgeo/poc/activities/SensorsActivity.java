@@ -1,6 +1,9 @@
 package com.softwarelogistics.oshgeo.poc.activities;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -10,6 +13,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.softwarelogistics.oshgeo.poc.R;
 import com.softwarelogistics.oshgeo.poc.adapters.SensorsAdapter;
@@ -142,28 +146,42 @@ public class SensorsActivity extends AppCompatActivity {
     }
 
     private void refreshFromServer() {
+        ConnectivityManager connManager = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connManager.getActiveNetworkInfo();
+        if(!networkInfo.isConnected()){
+            Toast.makeText(SensorsActivity.this, "Not connected to the internet.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
         GetSOSCapabilitiesTask task = new GetSOSCapabilitiesTask();
         task.responseHandler = new GetSOSCapabilitiesResponseHandler() {
             @Override
             public void gotCapabilities(Capabilities capabilities) {
-                for(ObservationDescriptor descriptor : capabilities.Descriptors){
-                    Sensor sensor = new Sensor();
-                    sensor.HubId = mHub.Id;
-                    sensor.Name = descriptor.Name;
-                    sensor.SensorType = "unknown";
-                    sensor.Description = descriptor.Description;
-                    sensor.SensorUniqueId = descriptor.Id;
-                    sensor.Location = descriptor.Position;
-                    GeoDataContext ctx = new GeoDataContext(SensorsActivity.this);
-                    final OSHDataContext oshHubCtx = ctx.getOSHDataContext(mDatabaseName);
+                if(capabilities == null) {
+                    mSensorBusyMask.setVisibility(View.GONE);
 
-                    oshHubCtx.refreshSensor(mHub, sensor);
+                    Toast.makeText(SensorsActivity.this, "Could not communicate with SOS Server, please check your connection settings.", Toast.LENGTH_LONG).show();
                 }
+                else {
+                    for (ObservationDescriptor descriptor : capabilities.Descriptors) {
+                        Sensor sensor = new Sensor();
+                        sensor.HubId = mHub.Id;
+                        sensor.Name = descriptor.Name;
+                        sensor.SensorType = "unknown";
+                        sensor.Description = descriptor.Description;
+                        sensor.SensorUniqueId = descriptor.Id;
+                        sensor.Location = descriptor.Position;
+                        GeoDataContext ctx = new GeoDataContext(SensorsActivity.this);
+                        final OSHDataContext oshHubCtx = ctx.getOSHDataContext(mDatabaseName);
 
-                mSensorBusyMask.setVisibility(View.GONE);
+                        oshHubCtx.refreshSensor(mHub, sensor);
+                    }
 
-                populateSensors();
-                getSensorValues();
+                    mSensorBusyMask.setVisibility(View.GONE);
+
+                    populateSensors();
+                    getSensorValues();
+                }
             }
         };
 
